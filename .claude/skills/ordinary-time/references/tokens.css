@@ -1,0 +1,119 @@
+/* Ordinary Time design tokens for LYG, CTM Parish.
+   Import once in app/globals.css. Set data-season on <html> from getSeason(). */
+
+:root {
+  /* Paper */
+  --paper: #F4EFE4;
+  --paper-deep: #E9E1CF;       /* shaded areas, sticker sheet */
+  --paper-edge: #D8CDB5;       /* hairlines, perforations */
+
+  /* Constant inks */
+  --ink-black: #1B1A17;        /* body text */
+  --ink-soft: #55514A;         /* secondary text, still AA on paper */
+  --ink-lourdes: #2447A8;      /* Marian blue, constant anchor, text-safe */
+  --ink-highlight: #FF4FA3;    /* fluorescent pink, margin notes and stickers only */
+
+  /* Season inks (defaults = Ordinary Time). Overridden by [data-season]. */
+  --ink-season: #12A05C;       /* fills, shapes, large display */
+  --ink-season-text: #0B6B3D;  /* text-safe version */
+  --season-name: "Ordinary Time";
+
+  /* Feedback */
+  --ok: #0B6B3D;
+  --error: #B3261E;
+
+  /* Type */
+  --font-display: var(--font-bricolage), "Arial Narrow", system-ui, sans-serif;
+  --font-serif: var(--font-instrument), Georgia, "Times New Roman", serif;
+  --font-body: var(--font-geist), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SFMono-Regular", monospace;
+  --font-hand: var(--font-caveat), "Comic Sans MS", cursive;
+
+  --text-label: 0.8125rem;                         /* 13 */
+  --text-body: 1rem;                               /* 16 */
+  --text-lead: 1.25rem;                            /* 20 */
+  --text-h3: 1.75rem;                              /* 28 */
+  --text-h2: clamp(2.5rem, 9vw, 3.5rem);           /* 40 to 56 */
+  --text-h1: clamp(4rem, 17vw, 6rem);              /* 64 to 96 */
+  --text-giant: clamp(5.5rem, 26vw, 11rem);        /* cover words */
+
+  /* Space */
+  --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px;
+  --s-5: 24px; --s-6: 32px; --s-7: 48px; --s-8: 72px;
+
+  /* Shape and depth */
+  --radius-sticker: 999px;
+  --radius-card: 18px;
+  --print-shadow: 4px 4px 0 var(--ink-season);
+  --misreg-x: 2px;
+  --misreg-y: 1px;
+
+  /* Motion */
+  --ease-print: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-fast: 150ms;
+  --dur-print: 300ms;
+  --dur-page: 250ms;
+
+  --focus-ring: 3px solid var(--ink-lourdes);
+}
+
+/* Liturgical seasons. Only change the season inks, never layout. */
+[data-season="advent"]   { --ink-season: #6A3FA3; --ink-season-text: #5A3290; --season-name: "Advent"; }
+[data-season="christmas"]{ --ink-season: #E6A817; --ink-season-text: #1B1A17; --season-name: "Christmas"; }
+[data-season="ordinary"] { --ink-season: #12A05C; --ink-season-text: #0B6B3D; --season-name: "Ordinary Time"; }
+[data-season="lent"]     { --ink-season: #6A3FA3; --ink-season-text: #5A3290; --season-name: "Lent"; }
+[data-season="triduum"]  { --ink-season: #C8302A; --ink-season-text: #A3241F; --season-name: "The Triduum"; }
+[data-season="easter"]   { --ink-season: #E6A817; --ink-season-text: #1B1A17; --season-name: "Easter"; }
+[data-season="pentecost"]{ --ink-season: #E0402E; --ink-season-text: #A3241F; --season-name: "Pentecost"; }
+[data-season="lourdes"]  { --ink-season: #7FB2F0; --ink-season-text: #2447A8; --season-name: "Our Lady of Lourdes"; }
+
+/* Optional dark paper for night use. Keep the same inks, lift the text. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #17150F;
+    --paper-deep: #221F17;
+    --paper-edge: #3A352A;
+    --ink-black: #F1EADB;
+    --ink-soft: #B9B1A1;
+    --ink-lourdes: #8FB0FF;
+  }
+  /* Season text colours are tuned for light paper, so fall back to cream text at night. */
+  :root[data-season]:not([data-theme="light"]) { --ink-season-text: #F1EADB; }
+}
+
+html { background: var(--paper); color: var(--ink-black); }
+body { font-family: var(--font-body); font-size: var(--text-body); line-height: 1.5; background: var(--paper); }
+
+:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+
+/* Grain overlay. Put <div class="grain" aria-hidden="true"></div> once in the root layout. */
+.grain {
+  position: fixed; inset: 0; pointer-events: none; z-index: 50; opacity: 0.14; mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+/* Misregistration for display headings.
+   Usage: <h1 class="misreg" data-text="Join us">Join us</h1> */
+.misreg { position: relative; color: var(--ink-lourdes); }
+.misreg::before {
+  content: attr(data-text); position: absolute; inset: 0;
+  color: var(--ink-season); mix-blend-mode: multiply;
+  transform: translate(var(--misreg-x), var(--misreg-y)); z-index: -1;
+}
+
+/* Duotone photo in the season ink. Wrap <img> in .duotone. */
+.duotone { position: relative; background: var(--ink-season); overflow: hidden; }
+.duotone img { display: block; width: 100%; height: auto; filter: grayscale(1) contrast(1.25) brightness(1.05); mix-blend-mode: multiply; }
+
+/* Grotto arch mask for photos and the member card. */
+.arch { border-radius: 999px 999px var(--radius-card) var(--radius-card); overflow: hidden; }
+
+/* Registration mark for page corners. */
+.reg-mark { width: 18px; height: 18px; border: 1.5px solid var(--ink-black); border-radius: 50%; position: relative; }
+.reg-mark::before, .reg-mark::after { content: ""; position: absolute; background: var(--ink-black); }
+.reg-mark::before { left: 50%; top: -5px; bottom: -5px; width: 1.5px; transform: translateX(-50%); }
+.reg-mark::after  { top: 50%; left: -5px; right: -5px; height: 1.5px; transform: translateY(-50%); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 1ms !important; transition-duration: 1ms !important; }
+}
