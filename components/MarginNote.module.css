@@ -1,0 +1,11 @@
+/* Handwritten aside. Decorative only: never instructions, errors, or anything
+   needed to finish a chapter. Lourdes blue, not pink: pink is 2.65:1 on paper. */
+.note {
+  font-family: var(--font-hand);
+  font-size: 1.25rem;
+  line-height: 1.25;
+  color: var(--ink-note);
+  transform: rotate(-2deg);
+  transform-origin: left center;
+  max-width: 24ch;
+}

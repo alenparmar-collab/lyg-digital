@@ -27,6 +27,7 @@ The LYG site is Next.js (App Router) with Supabase. Load fonts with `next/font/g
 
 ### Paper and ink
 - Every screen sits on one warm paper surface (`--paper`). No white cards floating on grey backgrounds.
+- Light paper is the only surface. Dark paper is opt-in (`data-theme="dark"`) and currently unused: it flattens every season's text ink to cream and breaks the printed member record. Do not wire it to `prefers-color-scheme`.
 - Each screen uses at most two spot inks plus black text: `--ink-lourdes` (constant) and `--ink-season` (changes with the Church season). A third ink, `--ink-highlight`, is allowed only for margin notes and stickers.
 - Overprint layered shapes with `mix-blend-mode: multiply` so blue over green makes a darker third colour, like a real riso print.
 - Misregistration: offset a duplicate layer of display headings or shapes by 1 to 3px in the second ink. Use `.misreg` from `tokens.css`. Never on body text or form inputs.
@@ -48,6 +49,9 @@ The LYG site is Next.js (App Router) with Supabase. Load fonts with `next/font/g
 - Keep tap targets at 48px minimum.
 
 ### Symbols
+
+**The LYG logo is the primary brand mark.** Eight figures hold hands in a ring and their joined arms form a cross in the negative space at the centre, so the mark carries "Christ at the centre" by itself. It is never redrawn, retraced, tidied up or rebuilt as a component, and never recoloured beyond its two variables: `--logo-accent` for the figures (set to `var(--ink-season)`, so the ring follows the Church year) and `--logo-ink` for the text, inner shapes and cross (set to `var(--ink-black)`). Files live in `public/brand/`: inline `lyg-logo-two-ink.svg` for normal use, and `lyg-logo-one-ink.svg` anywhere under 40px wide or in print, where the two-ink separation turns to mud. The full-colour JPG is for official parish documents only and never appears in the product. Because the centre cross is negative space, never place the mark on a filled panel.
+
 Use contemporary Catholic symbols sparingly and drawn in the riso line style:
 - Registration marks (the crosshair circle printers use to align plates) sit in page corners. They are a quiet cross and double as a print detail. This is the signature mark.
 - The grotto arch (Lourdes) is used as a mask shape for photos and the member card frame.
@@ -79,6 +83,8 @@ Full anatomy and states are in `references/components.md`.
 
 ## Accessibility (acceptance criteria)
 - WCAG 2.2 AA. Body text contrast 4.5:1 or better against `--paper`. Only `--ink-black`, `--ink-lourdes` and `--ink-season-text` may be used for text. Season fill inks (gold, green) are for shapes and large display only.
+- `--ink-highlight` (pink) is a shape and border ink. It is 2.65:1 on paper, so it is never text and never a fill behind text. Margin notes use `--ink-note`.
+- Any ink fill carrying a label uses the `--sticker-fill` / `--sticker-text` pair, never `--ink-season` directly. Paper text on Ordinary green is 2.95:1 and on Christmas gold 1.84:1; the pair passes in all eight seasons.
 - Every custom control maps to a native control: the map and stickers are checkboxes or radios underneath, visually restyled.
 - Visible focus: 3px `--ink-lourdes` outline with 2px offset on every interactive element.
 - Errors are written in plain Geist text next to the field, with `aria-describedby`, never only in colour or in handwriting.
@@ -113,6 +119,8 @@ Many members are under 18.
 - [ ] Two spot inks maximum per screen, plus black.
 - [ ] Looks right at 360px wide with no horizontal scroll.
 - [ ] All text passes 4.5:1 contrast; no text in gold or light green.
+- [ ] Selected stickers, chips and filled states use `--sticker-fill` / `--sticker-text`; no label sits on `--ink-season` or `--ink-highlight`.
+- [ ] The logo is the supplied SVG, inlined, recoloured only through `--logo-accent` and `--logo-ink`, on unfilled paper.
 - [ ] Keyboard and screen reader can complete the whole journey.
 - [ ] Reduced motion tested.
 - [ ] Share card contains no private fields.

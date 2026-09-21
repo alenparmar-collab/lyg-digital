@@ -1,0 +1,62 @@
+/* Progress as zine page numbers. No total: the perforated line fills
+   proportionally, but the denominator is never shown. */
+.strip {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: center;
+  gap: var(--s-3);
+  padding-block: var(--s-2);
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  margin-left: calc(var(--s-3) * -1);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink-black);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.back svg { display: block; }
+
+.page {
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  letter-spacing: 0.08em;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+/* A perforated tear line. The track is punched paper; the fill is the season
+   ink printed along it as far as you have come. */
+.perf {
+  position: relative;
+  height: 2px;
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--paper-edge) 0 6px,
+    transparent 6px 12px
+  );
+}
+
+.perfFill {
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--ink-season) 0 6px,
+    transparent 6px 12px
+  );
+  transition: width var(--dur-page) var(--ease-print);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .perfFill { transition: none; }
+}

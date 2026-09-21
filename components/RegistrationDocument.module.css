@@ -1,0 +1,232 @@
+/* An official LYG registration sheet. A4, one page where it fits.
+   Built to read as a document, not a database export: warm paper, mono labels,
+   ruled rows, restrained print detail. */
+
+.sheet {
+  --sheet-pad: var(--s-5);
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 210mm;
+  margin-inline: auto;
+  padding: var(--sheet-pad);
+  background: var(--paper);
+  color: var(--ink-black);
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+
+/* ---------------- header ---------------- */
+.header {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: var(--s-4);
+  padding-bottom: var(--s-4);
+  border-bottom: 2px solid var(--ink-black);
+}
+
+.logo { --logo-accent: var(--ink-season); --logo-ink: var(--ink-black); flex: none; }
+
+.org {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.375rem;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+
+.parish {
+  margin: var(--s-1) 0 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.docTitle {
+  margin: var(--s-2) 0 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-season-text);
+}
+
+/* ---------------- identification band ---------------- */
+.band {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: start;
+  gap: var(--s-3);
+  padding: var(--s-4) 0;
+  border-bottom: 1px solid var(--paper-edge);
+}
+
+.ref {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 1.125rem;
+  letter-spacing: 0.06em;
+  color: var(--ink-black);
+}
+
+.refLabel {
+  display: block;
+  margin-bottom: var(--s-1);
+  font-size: var(--text-label);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.type {
+  justify-self: end;
+  padding: var(--s-1) var(--s-3);
+  background: var(--sticker-fill);
+  color: var(--sticker-text);
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.dates { margin: var(--s-3) 0 0; }
+
+/* ---------------- sections ---------------- */
+.section { padding-top: var(--s-4); break-inside: avoid; }
+
+.sectionTitle {
+  margin: 0 0 var(--s-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-season-text);
+}
+
+.rows { margin: 0; display: grid; }
+
+.row {
+  display: grid;
+  grid-template-columns: 11rem 1fr;
+  gap: var(--s-3);
+  padding: var(--s-2) 0;
+  border-bottom: 1px solid var(--paper-edge);
+  font-size: 0.9375rem;
+  line-height: 1.45;
+}
+
+.rowLabel {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
+  align-self: start;
+}
+
+.rowValue { margin: 0; color: var(--ink-black); overflow-wrap: anywhere; }
+
+.tags { display: flex; flex-wrap: wrap; gap: var(--s-1) var(--s-2); }
+
+.tag {
+  padding: 1px var(--s-2);
+  border: 1px solid var(--ink-black);
+  border-radius: var(--radius-sticker);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.none { color: var(--ink-soft); font-style: italic; }
+
+/* ---------------- footer ---------------- */
+.footer {
+  margin-top: var(--s-5);
+  padding-top: var(--s-4);
+  border-top: 2px solid var(--ink-black);
+  display: grid;
+  gap: var(--s-3);
+  break-inside: avoid;
+}
+
+.verse {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 1.0625rem;
+  line-height: 1.4;
+  color: var(--ink-black);
+}
+
+.verseRef {
+  display: block;
+  margin-top: var(--s-1);
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  font-style: normal;
+  letter-spacing: 0.08em;
+  color: var(--ink-soft);
+}
+
+.footNote {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--s-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+@media (min-width: 640px) {
+  .sheet { --sheet-pad: var(--s-7); }
+  .org { font-size: 1.75rem; }
+}
+
+/* ---------------- print ----------------
+   Tightened so a typical registration lands on one A4 page: smaller type, less
+   row padding, and the label column narrowed. An under-18 record with a long
+   previous-group note can still run to two pages, which is fine. */
+@media print {
+  .sheet {
+    max-width: none;
+    width: auto;
+    margin: 0;
+    padding: 0;
+    background: var(--paper);
+    font-size: 9.5pt;
+  }
+
+  .header { gap: 12px; padding-bottom: 8px; align-items: center; }
+  /* The inline SVG carries its own width style, so the override has to reach
+     the element itself, not the wrapper. */
+  .header .logo svg { width: 46px !important; height: auto; }
+  .org { font-size: 15pt; }
+  .parish, .docTitle { font-size: 7pt; margin-top: 2px; }
+
+  .band { padding: 8px 0; }
+  .ref { font-size: 12pt; }
+  .refLabel { font-size: 7pt; margin-bottom: 1px; }
+  .type { padding: 1px 6px; font-size: 7pt; border: 1px solid var(--ink-black); }
+
+  .section { padding-top: 7px; }
+  .sectionTitle { margin-bottom: 1px; font-size: 7.5pt; letter-spacing: 0.08em; }
+
+  .row { grid-template-columns: 9rem 1fr; gap: 8px; padding: 2px 0; font-size: 9.5pt; line-height: 1.3; }
+  .rowLabel { font-size: 7.5pt; }
+
+  .tag { font-size: 7.5pt; padding: 0 5px; }
+
+  .footer { margin-top: 10px; padding-top: 7px; gap: 4px; }
+  .verse { font-size: 10pt; line-height: 1.3; }
+  .verseRef { font-size: 7pt; margin-top: 1px; }
+  .footNote { font-size: 7pt; }
+}

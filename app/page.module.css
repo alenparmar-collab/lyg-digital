@@ -1,0 +1,143 @@
+.cover {
+  position: relative;
+  min-height: 100svh;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto 1fr auto;
+  gap: var(--s-4);
+  padding: var(--s-6) var(--s-4) var(--s-7);
+  overflow: hidden;
+}
+
+/* ---------- masthead ---------- */
+.head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+/* The figures take the season ink, the text and centre cross stay black. */
+.logo {
+  --logo-accent: var(--ink-season);
+  --logo-ink: var(--ink-black);
+  flex: none;
+}
+
+/* ---------- the spread ---------- */
+.spread {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  align-content: start;
+  gap: var(--s-3);
+  padding-top: var(--s-5);
+}
+
+/* Scripture runs up the left gutter like a caption printed along a spine,
+   rather than sitting under the headline as a subtitle. */
+.scripture {
+  writing-mode: vertical-rl;
+  margin: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-4);
+  align-self: start;
+  padding-top: var(--s-2);
+}
+
+.verse {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: var(--text-lead);
+  line-height: 1;
+  color: var(--ink-black);
+}
+
+.ref {
+  font-style: normal;
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  letter-spacing: 0.08em;
+  color: var(--ink-soft);
+}
+
+/* ---------- headline ---------- */
+.headline {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--text-giant);
+  line-height: 0.82;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  color: var(--ink-lourdes);
+  /* "& SEE" is meant to run past the right edge and crop. */
+  white-space: nowrap;
+}
+
+.word { display: block; }
+
+/* Second line pushed right so the phrase breaks the frame instead of sitting
+   politely inside it. You read the cropped half by inference. */
+.word2 { margin-left: 0.62em; }
+
+/* tokens.css paints the misregistered plate behind the text at z-index: -1.
+   On a full-bleed paper background that can drop behind the page, so the
+   headline gets its own stacking context to keep the plate inside it.
+   Painting the plate on top instead would darken the whole glyph and read as a
+   drop shadow, which is the opposite of misregistration. */
+.headline { isolation: isolate; }
+
+/* ---------- footer ---------- */
+.foot {
+  display: grid;
+  gap: var(--s-4);
+  align-content: end;
+}
+
+.note { margin: 0 0 0 var(--s-1); }
+
+.printline {
+  margin: var(--s-2) 0 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  text-align: right;
+  padding-right: var(--s-7);
+}
+
+/* ---------- tall phones: don't let the empty paper become a chasm ---------- */
+@media (min-height: 820px) {
+  .spread { align-content: center; padding-top: 0; }
+}
+
+/* ---------- desktop ----------
+   The skill's brief for desktop is the same spread with more margin, not a new
+   layout. So the page becomes a fixed-width zine page centred on the paper:
+   --text-giant clamps at 11rem, and a 700px page is what keeps "& see" running
+   off the right edge instead of sitting politely inside a dead half-screen. */
+@media (min-width: 760px) {
+  .cover {
+    max-width: 700px;
+    margin-inline: auto;
+    padding: var(--s-8) var(--s-7);
+    gap: var(--s-6);
+  }
+  .spread { grid-template-columns: 40px minmax(0, 1fr); gap: var(--s-6); }
+
+  .foot {
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    gap: var(--s-5) var(--s-6);
+  }
+  .note { grid-row: 1; grid-column: 1; }
+  .foot > a {
+    grid-row: 2;
+    grid-column: 1 / -1;
+    width: auto;
+    min-width: 340px;
+    justify-self: start;
+  }
+  .printline { grid-row: 1; grid-column: 2; padding-right: 0; text-align: right; }
+}
