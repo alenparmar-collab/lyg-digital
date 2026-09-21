@@ -1,0 +1,52 @@
+.header { position: relative; }
+
+.label {
+  margin: 0 0 var(--s-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+/* Smaller than the cover on purpose: the cover is the only screen that shouts. */
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--text-h2);
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  color: var(--ink-black);
+  max-width: 22ch;
+}
+
+.lead {
+  margin: var(--s-4) 0 0;
+  font-size: var(--text-body);
+  line-height: 1.5;
+  color: var(--ink-soft);
+  max-width: 34ch;
+}
+
+/* The page's chapter number printed oversized into the top margin and cropped
+   by the edge, the way a zine numbers its spreads. Paper-deep on paper, so it
+   is texture rather than information. */
+.numeral {
+  position: absolute;
+  top: -0.34em;
+  right: calc(var(--s-6) * -1);
+  z-index: -1;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(7rem, 34vw, 11rem);
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: var(--paper-deep);
+  pointer-events: none;
+  user-select: none;
+}
+
+@media (min-width: 760px) {
+  .numeral { right: calc(var(--s-7) * -1); font-size: 11rem; }
+}

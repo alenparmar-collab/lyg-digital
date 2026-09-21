@@ -1,0 +1,28 @@
+/* Shared chapter furniture for the question pages. Deliberately plainer than
+   the cover and the index: these are pages you write on. */
+
+.fields { margin-top: var(--s-6); display: grid; gap: var(--s-6); }
+
+.actions { margin-top: var(--s-6); display: grid; gap: var(--s-4); }
+
+/* A handwritten aside pulled into the gutter on desktop, under the fields on
+   mobile. One per screen, and never load-bearing. */
+.note { margin-top: var(--s-5); }
+
+.confirm {
+  margin: 0;
+  padding-left: var(--s-4);
+  border-left: 2px solid var(--ink-season);
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  color: var(--ink-black);
+}
+
+/* Water ripple divider from the design system, used here to separate the
+   required line from the optional one. */
+.ripple { display: block; width: 100%; height: 12px; color: var(--paper-edge); }
+
+@media (min-width: 760px) {
+  .fields { gap: var(--s-8); max-width: 34rem; }
+  .actions > a, .actions > button { width: auto; min-width: 340px; justify-self: start; }
+}

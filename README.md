@@ -13,10 +13,18 @@ Built so far:
 
 - Visual shell: design tokens, fonts, liturgical season helper, the logo
   component, and the cover screen.
+- The first three chapters of the registration journey at `/join`: WELCOME
+  (join or update), IDENTITY (name and date of birth) and CONNECTION (mobile
+  and email), with client-side validation and answers kept in sessionStorage.
 
-Not built yet: the registration chapters, the database, submission, the
-returning-member path, and the admin member record. Nothing in this repo talks
-to Supabase yet.
+Not built yet: COMMUNITY, LIFE, INTERESTS, PURPOSE, the guardian chapter,
+GUIDELINES, REVIEW, the completion screen, returning-member verification, the
+database, submission, and the admin member record. Chapters that are not built
+render a panel that says so. Nothing in this repo talks to Supabase yet.
+
+Screen order: WELCOME, IDENTITY, CONNECTION, COMMUNITY, LIFE, INTERESTS,
+PURPOSE, the guardian chapter for under-18s, GUIDELINES, REVIEW, and the
+completion screen. Returning-member verification follows WELCOME.
 
 ## Running it locally
 
@@ -64,6 +72,8 @@ done.
   one seed file and re-running it.
 - The John 15:15 line on the completion screen: awaiting confirmation of the
   translation the parish reads at Mass.
+- Chapters after CONNECTION: each renders a clearly marked "not built yet"
+  panel rather than a half-working screen.
 
 ## Later, not in V1
 

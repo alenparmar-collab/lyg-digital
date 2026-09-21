@@ -1,0 +1,17 @@
+.panel {
+  margin-top: var(--s-6);
+  padding: var(--s-5);
+  border: 2px dashed var(--error);
+}
+
+.tag {
+  margin: 0 0 var(--s-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--error);
+}
+
+.text { margin: 0; font-size: var(--text-body); line-height: 1.5; color: var(--ink-black); }
+.text + .text { margin-top: var(--s-3); }

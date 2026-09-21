@@ -1,0 +1,109 @@
+/* An index page, not two cards. Two numbered entries inside a tear-off block:
+   perforated rules top and bottom, a hairline between, no borders, no shadows,
+   nothing floating. */
+
+.coupon {
+  margin-top: var(--s-6);
+  border-top: 2px dashed var(--paper-edge);
+  border-bottom: 2px dashed var(--paper-edge);
+}
+
+.row {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: var(--s-4);
+  padding: var(--s-5) var(--s-3) var(--s-5) 0;
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-print);
+}
+
+.row + .row { border-top: 1px solid var(--paper-edge); }
+
+.radio {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.row:has(.radio:focus-visible) {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* The chosen entry is printed: the paper darkens, the numeral becomes an ink
+   block, and the title picks up a misregistered plate in the season ink. */
+.rowOn { background-color: var(--paper-deep); }
+
+.num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  padding: var(--s-1) var(--s-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-lead);
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
+  border: 2px solid transparent;
+  transition: background-color var(--dur-fast) var(--ease-print),
+              color var(--dur-fast) var(--ease-print),
+              border-color var(--dur-fast) var(--ease-print);
+}
+
+.rowOn .num {
+  background: var(--sticker-fill);
+  border-color: var(--sticker-fill);
+  color: var(--sticker-text);
+}
+
+.body { display: block; min-width: 0; }
+
+.eyebrow {
+  display: block;
+  margin-bottom: var(--s-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.rowTitle {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.75rem, 4.5vw, 2.5rem);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--ink-black);
+}
+
+/* misreg paints its plate at z-index -1, so the title needs its own stacking
+   context or the plate falls behind the paper. The colour is pinned here too:
+   tokens.css sets .misreg to Lourdes blue at the same specificity as
+   .rowTitle, so without this the winner would depend on stylesheet order.
+   Black on paper-deep is 13.9:1 and lets the season-ink plate be the signal. */
+.rowOn .rowTitle { isolation: isolate; color: var(--ink-black); }
+
+.actions { margin-top: var(--s-6); display: grid; gap: var(--s-4); }
+
+.formError {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: var(--error);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .row, .num { transition: none; }
+}
+
+@media (min-width: 760px) {
+  .row { padding-block: var(--s-6); gap: var(--s-6); }
+  .actions > a, .actions > button { width: auto; min-width: 340px; justify-self: start; }
+}
