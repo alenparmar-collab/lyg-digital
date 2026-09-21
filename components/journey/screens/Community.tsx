@@ -5,6 +5,7 @@ import ChapterHeader from "../ChapterHeader";
 import InkField from "../InkField";
 import MarginNote from "@/components/MarginNote";
 import StampButton from "@/components/StampButton";
+import { titleCasePlace } from "@/lib/registration/validate";
 import styles from "./Chapter.module.css";
 
 /**
@@ -13,7 +14,12 @@ import styles from "./Chapter.module.css";
  *
  * Community is optional on purpose. Plenty of members will not know a
  * community name, and a required field they guess at is worse data than a
- * blank one. The server tidies and title-cases both.
+ * blank one.
+ *
+ * Both fields are tidied when they lose focus, using the same function the
+ * server uses, so REVIEW shows what will actually be stored rather than the
+ * raw typing. The server still normalises whatever arrives, whether or not
+ * this ever ran.
  */
 export default function Community({
   area,
@@ -53,6 +59,10 @@ export default function Community({
       communityRef.current?.focus();
       return;
     }
+    // Tidy on submit as well: pressing Enter can leave a field without ever
+    // firing blur.
+    onArea(titleCasePlace(area));
+    onCommunity(titleCasePlace(community));
     setAreaError(undefined);
     setCommunityError(undefined);
     onContinue();
@@ -70,6 +80,7 @@ export default function Community({
             setAreaError(undefined);
             onArea(v);
           }}
+          onBlur={() => onArea(titleCasePlace(area))}
           error={areaError}
           inputRef={areaRef}
           type="text"
@@ -85,6 +96,7 @@ export default function Community({
             setCommunityError(undefined);
             onCommunity(v);
           }}
+          onBlur={() => onCommunity(titleCasePlace(community))}
           error={communityError}
           inputRef={communityRef}
           hint="Leave this empty if you are not sure, or if your area has no separate community."

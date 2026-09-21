@@ -137,3 +137,34 @@ export function validateEmail(value: string): FieldError {
   }
   return undefined;
 }
+
+/**
+ * Area and community are free text, so they are tidied rather than matched
+ * against a list: trimmed, repeated spaces collapsed, and title-cased so
+ * "naranpura  east" and "NARANPURA EAST" both store as "Naranpura East".
+ *
+ * Words are lowercased before their first letter is capitalised, because
+ * all-caps typing is common. That does mean a name like "McDonald" comes back
+ * as "Mcdonald"; the committee can correct those in Supabase.
+ */
+export function titleCasePlace(value: string): string {
+  const tidied = value.trim().replace(/\s+/g, " ").toLowerCase();
+
+  // First letter of each word, and of each hyphenated part: "anand-nagar"
+  // becomes "Anand-Nagar".
+  let out = tidied.replace(
+    /(^|[\s\-])(\p{L})/gu,
+    (_m, sep: string, letter: string) => sep + letter.toUpperCase(),
+  );
+
+  // A name like D'Souza or O'Brien takes a capital after the apostrophe. A
+  // possessive like Anne's does not. What tells them apart is the single
+  // letter before the apostrophe, so only that case is capitalised.
+  out = out.replace(
+    /(^|[\s\-])(\p{L})(['\u2019])(\p{L})/gu,
+    (_m, sep: string, first: string, mark: string, letter: string) =>
+      sep + first.toUpperCase() + mark + letter.toUpperCase(),
+  );
+
+  return out;
+}
