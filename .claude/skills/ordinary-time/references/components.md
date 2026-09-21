@@ -57,7 +57,8 @@ Returning members verify first (phone OTP or date of birth), then land on a "Wel
 
 ## StickerPicker (interests)
 - Interests appear as round or pill stickers on a paper-deep sheet, each rotated by a fixed angle between -4 and 4 degrees (derive the angle from the item id so it never jumps on re-render).
-- Selected: sticker fills with `--ink-season` or `--ink-highlight`, text flips to paper colour, a small drop animation plays.
+- Unselected: paper-deep fill, 2px `--ink-black` border, label in `--ink-black`.
+- Selected: sticker fills with `--sticker-fill` and the label flips to `--sticker-text`, plus a small drop animation. Never fill with `--ink-season` or `--ink-highlight` behind a label: both fail AA on every season (see `tokens.css`). Pink and the season fill ink may still be used for the sticker's border and for the unselected sheet.
 - Underneath: checkboxes with a fieldset and legend.
 - Include an "Other" sticker that opens an `InkField`.
 - Starting list (edit freely): music and choir, liturgy and altar service, sports, drama and dance, social media and content, photography and video, service and outreach, Bible study, retreats and pilgrimages, cooking and food, gaming, art and design, event planning, mentoring younger kids.
@@ -73,7 +74,7 @@ Returning members verify first (phone OTP or date of birth), then land on a "Wel
 - Full width on mobile, 56px tall. One primary button per screen.
 
 ## MarginNote
-- Caveat 20 to 24px in `--ink-highlight` or `--ink-lourdes`, rotated -3 to 3 degrees, sometimes with a hand-drawn arrow SVG.
+- Caveat 20 to 24px in `--ink-note` (Lourdes blue), rotated -3 to 3 degrees, sometimes with a hand-drawn arrow SVG. Not `--ink-highlight`: pink is 2.65:1 on paper and unreadable outdoors, which is where these members are.
 - Purely decorative: `aria-hidden="true"`, never carries information the person needs.
 - One per screen at most. Hidden during the Triduum.
 

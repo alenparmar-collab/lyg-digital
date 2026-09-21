@@ -1,0 +1,14 @@
+.marks { position: absolute; inset: 0; pointer-events: none; }
+
+.marks > :global(.reg-mark) { position: absolute; }
+.marks > :global(.reg-mark):nth-child(1) { top: var(--s-4); left: var(--s-4); }
+.marks > :global(.reg-mark):nth-child(2) { top: var(--s-4); right: var(--s-4); }
+.marks > :global(.reg-mark):nth-child(3) { bottom: var(--s-4); left: var(--s-4); }
+.marks > :global(.reg-mark):nth-child(4) { bottom: var(--s-4); right: var(--s-4); }
+
+@media (min-width: 700px) {
+  .marks > :global(.reg-mark):nth-child(1) { top: var(--s-5); left: var(--s-5); }
+  .marks > :global(.reg-mark):nth-child(2) { top: var(--s-5); right: var(--s-5); }
+  .marks > :global(.reg-mark):nth-child(3) { bottom: var(--s-5); left: var(--s-5); }
+  .marks > :global(.reg-mark):nth-child(4) { bottom: var(--s-5); right: var(--s-5); }
+}

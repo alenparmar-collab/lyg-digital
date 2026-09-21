@@ -1,0 +1,15 @@
+@import "./tokens.css";
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body { margin: 0; padding: 0; }
+
+/* The cover and every chapter crop oversized type against the right edge on
+   purpose. That must never turn into a horizontal scrollbar at 360px. */
+html { overflow-x: hidden; }
+
+body { -webkit-text-size-adjust: 100%; }
+
+/* Anything focusable must show it. tokens.css sets the ring; this stops a
+   custom control from quietly opting out. */
+:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
