@@ -71,8 +71,6 @@ Things that are deliberately not finished. Nothing here should be described as
 done.
 
 - Guidelines text on the consent chapter: awaiting the committee's copy.
-- Areas and communities: placeholder rows, clearly marked, replaced by swapping
-  one seed file and re-running it.
 - The John 15:15 line on the completion screen: awaiting confirmation of the
   translation the parish reads at Mass.
 - Chapters after CONNECTION: each renders a clearly marked "not built yet"

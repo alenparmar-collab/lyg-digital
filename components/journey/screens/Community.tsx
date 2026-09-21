@@ -2,13 +2,19 @@
 
 import { useRef, useState } from "react";
 import ChapterHeader from "../ChapterHeader";
-import { ChoiceList } from "../Choice";
+import InkField from "../InkField";
 import MarginNote from "@/components/MarginNote";
 import StampButton from "@/components/StampButton";
-import { AREAS, communitiesFor } from "@/lib/areas";
 import styles from "./Chapter.module.css";
 
-/** Area first, then only the communities inside it. Parish is never asked. */
+/**
+ * Area and community as free text. Parish is always CTM Parish: stored
+ * implicitly, never asked.
+ *
+ * Community is optional on purpose. Plenty of members will not know a
+ * community name, and a required field they guess at is worse data than a
+ * blank one. The server tidies and title-cases both.
+ */
 export default function Community({
   area,
   community,
@@ -29,17 +35,21 @@ export default function Community({
   const areaRef = useRef<HTMLInputElement>(null);
   const communityRef = useRef<HTMLInputElement>(null);
 
-  const communities = communitiesFor(area);
-
   function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!area) {
-      setAreaError("Choose your area.");
+    const trimmedArea = area.trim();
+    if (trimmedArea.length < 2) {
+      setAreaError("We need your area.");
       areaRef.current?.focus();
       return;
     }
-    if (!community) {
-      setCommunityError("Choose your community.");
+    if (trimmedArea.length > 80) {
+      setAreaError("That is longer than we can store. Shorten it a little.");
+      areaRef.current?.focus();
+      return;
+    }
+    if (community.trim().length > 80) {
+      setCommunityError("That is longer than we can store. Shorten it a little.");
       communityRef.current?.focus();
       return;
     }
@@ -53,39 +63,39 @@ export default function Community({
       <ChapterHeader chapter={4} name="Community" title="Where you're from" />
 
       <div className={styles.fields}>
-        <ChoiceList
-          legend="Your area"
-          name="area"
-          options={AREAS.map((a) => ({ value: a.name, label: a.name }))}
+        <InkField
+          label="Your area"
           value={area}
           onChange={(v) => {
             setAreaError(undefined);
             onArea(v);
-            // Changing area invalidates the community below it.
-            if (community && !communitiesFor(v).includes(community)) onCommunity("");
           }}
           error={areaError}
-          firstRef={areaRef}
+          inputRef={areaRef}
+          type="text"
+          autoCapitalize="words"
+          autoComplete="address-level3"
+          enterKeyHint="next"
         />
 
-        {area ? (
-          <ChoiceList
-            legend={`Your community in ${area}`}
-            name="community"
-            options={communities.map((c) => ({ value: c, label: c }))}
-            value={community}
-            onChange={(v) => {
-              setCommunityError(undefined);
-              onCommunity(v);
-            }}
-            error={communityError}
-            firstRef={communityRef}
-          />
-        ) : null}
+        <InkField
+          label="Your community (optional)"
+          value={community}
+          onChange={(v) => {
+            setCommunityError(undefined);
+            onCommunity(v);
+          }}
+          error={communityError}
+          inputRef={communityRef}
+          hint="Leave this empty if you are not sure, or if your area has no separate community."
+          type="text"
+          autoCapitalize="words"
+          enterKeyHint="done"
+        />
       </div>
 
       <MarginNote quiet={quiet} className={styles.note} rotate={-1.5}>
-        Everyone here is CTM Parish. We won't make you tell us that.
+        Everyone here is CTM Parish. We won&apos;t make you tell us that.
       </MarginNote>
 
       <div className={styles.actions}>

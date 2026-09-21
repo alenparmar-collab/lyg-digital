@@ -55,7 +55,9 @@ export default function Review({
       step: "community",
       rows: [
         ["Area", draft.area],
-        ["Community", draft.community],
+        ...(draft.community.trim()
+          ? ([["Community", draft.community]] as [string, React.ReactNode][])
+          : []),
       ],
     },
     {

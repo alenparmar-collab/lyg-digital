@@ -34,7 +34,8 @@ create table if not exists members (
   email                        text,
 
   area                         text not null,
-  community                    text not null,
+  -- Free text, and optional: see 0002_free_text_area.sql.
+  community                    text,
 
   current_status               text not null,
   institution_or_workplace     text,
@@ -77,7 +78,13 @@ create table if not exists members (
   constraint members_join_season_allowed check (join_season in (
     'advent', 'christmas', 'ordinary', 'lent', 'triduum', 'easter',
     'pentecost', 'lourdes'
-  ))
+  )),
+
+  -- Area and community are free text, tidied and title-cased by the server.
+  -- An empty community is stored as null, never as an empty string.
+  constraint members_area_shape check (length(area) between 2 and 80),
+  constraint members_community_shape
+    check (community is null or (length(community) between 1 and 80))
 );
 
 create index if not exists members_phone_idx on members (phone);

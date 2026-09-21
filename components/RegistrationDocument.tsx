@@ -136,7 +136,7 @@ export default function RegistrationDocument({
         <div className={styles.section}>
           <h2 className={styles.sectionTitle}>Community</h2>
           <Row label="Area">{member.area}</Row>
-          <Row label="Community">{member.community}</Row>
+          {member.community ? <Row label="Community">{member.community}</Row> : null}
           <Row label="Parish">CTM Parish</Row>
         </div>
 

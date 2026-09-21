@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { isValidAreaCommunity } from "@/lib/areas";
 import {
   CURRENT_STATUS_VALUES,
   INTEREST_VALUES,
@@ -15,6 +14,37 @@ import { ageOn, todayInIndia } from "./validate";
  */
 
 export const PHONE_E164 = /^\+91[6-9][0-9]{9}$/;
+
+/**
+ * Area and community are free text, so they are tidied rather than matched
+ * against a list: trimmed, repeated spaces collapsed, and title-cased so
+ * "naranpura  east" and "NARANPURA EAST" both store as "Naranpura East".
+ *
+ * Words are lowercased before their first letter is capitalised, because
+ * all-caps typing is common. That does mean a name like "McDonald" comes back
+ * as "Mcdonald"; the committee can correct those in Supabase.
+ */
+export function titleCasePlace(value: string): string {
+  const tidied = value.trim().replace(/\s+/g, " ").toLowerCase();
+
+  // First letter of each word, and of each hyphenated part: "anand-nagar"
+  // becomes "Anand-Nagar".
+  let out = tidied.replace(
+    /(^|[\s\-])(\p{L})/gu,
+    (_m, sep: string, letter: string) => sep + letter.toUpperCase(),
+  );
+
+  // A name like D'Souza or O'Brien takes a capital after the apostrophe. A
+  // possessive like Anne's does not. What tells them apart is the single
+  // letter before the apostrophe, so only that case is capitalised.
+  out = out.replace(
+    /(^|[\s\-])(\p{L})(['\u2019])(\p{L})/gu,
+    (_m, sep: string, first: string, mark: string, letter: string) =>
+      sep + first.toUpperCase() + mark + letter.toUpperCase(),
+  );
+
+  return out;
+}
 
 /** Accepts what people type; returns E.164 or undefined. */
 export function normalisePhone(value: string): string | undefined {
@@ -68,8 +98,19 @@ export const registrationSchema = z
       )
       .transform((v) => (v === "" ? null : v)),
 
-    area: z.string().min(1, "Choose your area."),
-    community: z.string().min(1, "Choose your community."),
+    area: z
+      .string()
+      .transform(titleCasePlace)
+      .refine((v) => v.length >= 2, "We need your area.")
+      .refine((v) => v.length <= 80, "That is longer than we can store."),
+
+    // Optional: plenty of members will not know a community name, and an
+    // empty answer is stored as null rather than an empty string.
+    community: z
+      .string()
+      .transform(titleCasePlace)
+      .refine((v) => v.length <= 80, "That is longer than we can store.")
+      .transform((v) => (v === "" ? null : v)),
 
     currentStatus: z.enum(CURRENT_STATUS_VALUES as [string, ...string[]], {
       message: "Choose what you are doing at the moment.",
@@ -142,11 +183,6 @@ export const registrationSchema = z
         "Anyone under 18 needs a parent or guardian's name, phone number and consent before we can register them.",
     },
   )
-  // The community has to belong to the area, checked against lib/areas.ts.
-  .refine((d) => isValidAreaCommunity(d.area, d.community), {
-    path: ["community"],
-    message: "That community is not in that area.",
-  })
   // A place only when the status makes one meaningful.
   .refine((d) => !statusNeedsPlace(d.currentStatus) || Boolean(d.institutionOrWorkplace), {
     path: ["institutionOrWorkplace"],

@@ -14,7 +14,7 @@ type Row = {
   reference_id: string;
   full_name: string;
   area: string;
-  community: string;
+  community: string | null;
   membership_status: string;
   created_at: string;
 };
@@ -127,7 +127,7 @@ export default async function CommitteeListPage({
                 <p className={styles.rowRef}>{row.reference_id}</p>
                 <p className={styles.rowName}>{row.full_name}</p>
                 <p className={styles.rowWhere}>
-                  {row.area} · {row.community}
+                  {row.community ? `${row.area} · ${row.community}` : row.area}
                 </p>
               </div>
               <div className={styles.rowMeta}>

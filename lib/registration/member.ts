@@ -10,7 +10,7 @@ export type SavedMember = {
   phone: string;
   email: string | null;
   area: string;
-  community: string;
+  community: string | null;
   current_status: string;
   institution_or_workplace: string | null;
   previous_youth_group: boolean;

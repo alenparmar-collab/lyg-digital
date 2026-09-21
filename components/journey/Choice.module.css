@@ -119,14 +119,18 @@
 .strip:has(.input:focus-visible) { outline: var(--focus-ring); outline-offset: 2px; }
 .stripOn { background: var(--sticker-fill); color: var(--sticker-text); }
 
-.stripDot {
-  width: 10px;
-  height: 10px;
-  border: 2px solid currentColor;
-  border-radius: 50%;
+/* Square, like every other multi-select in the flow. A round marker reads as
+   a radio button, and PURPOSE takes as many answers as you like. */
+.stripMark {
+  width: 20px;
+  height: 20px;
   flex: none;
+  border: 2px solid currentColor;
+  display: grid;
+  place-items: center;
+  color: inherit;
 }
-.stripOn .stripDot { background: currentColor; }
+.stripMark svg { display: block; }
 
 /* ---------- checkbox on its own ---------- */
 .check {

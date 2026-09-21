@@ -136,7 +136,9 @@ export function StripPicker({
                 checked={on}
                 onChange={() => onToggle(o.value)}
               />
-              <span className={styles.stripDot} aria-hidden="true" />
+              <span className={styles.stripMark} aria-hidden="true">
+                {on ? <Tick /> : null}
+              </span>
               <span>{o.label}</span>
             </label>
           );
