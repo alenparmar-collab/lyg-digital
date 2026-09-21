@@ -32,18 +32,18 @@ export const NUMBERED_STEPS: Step[] = [
   "purpose",
   "guardian",
   "guidelines",
+  "review",
 ];
 
 /**
- * Age limits. These are typo guards, not a policy: LYG runs from school
- * students to young working people around 28, but a 30-year-old helper should
- * not be blocked by a date checker, so the hard ceiling sits well above the
- * group's description. Anything at or above SOFT_MAX_AGE gets a gentle "is
- * that right?" rather than an error.
+ * Age limits. Typo guards, not policy. LYG runs from school students to young
+ * working people around 28, so the hard ceiling sits well above the group's
+ * description: a 32-year-old helper should not be stopped by a date checker.
+ * Anything from SOFT_MAX_AGE up gets a gentle "is that right?", not an error.
  */
 export const MIN_AGE = 12;
-export const MAX_AGE = 35;
-export const SOFT_MAX_AGE = 29;
+export const MAX_AGE = 40;
+export const SOFT_MAX_AGE = 30;
 
 /** Under this age on the day they register, the guardian chapter appears. */
 export const GUARDIAN_AGE = 18;

@@ -17,12 +17,15 @@ export default function Identity({
   onFullName,
   onDob,
   onContinue,
+  lockedDob = false,
 }: {
   fullName: string;
   dob: { day: string; month: string; year: string };
   onFullName: (value: string) => void;
   onDob: (value: { day: string; month: string; year: string }) => void;
   onContinue: (result: DateResult) => void;
+  /** Update path: the date of birth came from verification and is fixed. */
+  lockedDob?: boolean;
 }) {
   const [nameError, setNameError] = useState<string>();
   const [dobError, setDobError] = useState<string>();
@@ -74,6 +77,18 @@ export default function Identity({
           placeholder="Rhea Fernandes"
         />
 
+        {lockedDob ? (
+          <div className={styles.locked}>
+            <span className={styles.lockedLabel}>Date of birth</span>
+            <span className={styles.lockedValue}>
+              {dob.day.padStart(2, "0")} / {dob.month.padStart(2, "0")} / {dob.year}
+            </span>
+            <p className={styles.lockedNote}>
+              This is what you verified with. To change your date of birth, speak to the LYG
+              committee.
+            </p>
+          </div>
+        ) : (
         <div>
           <DateField
             legend="Date of birth"
@@ -93,6 +108,7 @@ export default function Identity({
             </p>
           ) : null}
         </div>
+        )}
       </div>
 
       <div className={styles.actions}>

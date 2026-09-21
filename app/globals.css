@@ -27,3 +27,13 @@ body { -webkit-text-size-adjust: 100%; }
   white-space: nowrap;
   border: 0;
 }
+
+/* Anything the print sheet should not carry: navigation, buttons, back links.
+   Global because it is applied across pages and CSS Modules requires every
+   selector to carry a local class. */
+@media print {
+  [data-print-hide] { display: none !important; }
+  .grain { display: none !important; }
+  @page { size: A4; margin: 12mm; }
+  html, body { background: #fff; }
+}

@@ -1,0 +1,179 @@
+/* Plainer than the member journey, same paper, type and mark. */
+
+.page {
+  position: relative;
+  min-height: 100svh;
+  max-width: 940px;
+  margin-inline: auto;
+  padding: var(--s-6) var(--s-4) var(--s-8);
+}
+
+.top {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--s-3);
+  padding-bottom: var(--s-4);
+  border-bottom: 2px solid var(--ink-black);
+}
+
+.logo { --logo-accent: var(--ink-season); --logo-ink: var(--ink-black); flex: none; }
+
+.who {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+.logout {
+  border: 2px solid var(--ink-black);
+  background: none;
+  padding: var(--s-2) var(--s-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-black);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.title {
+  margin: var(--s-6) 0 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--text-h2);
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+
+.count {
+  margin: var(--s-2) 0 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.search { margin-top: var(--s-6); display: flex; gap: var(--s-3); align-items: flex-end; flex-wrap: wrap; }
+.searchField { flex: 1 1 14rem; min-width: 0; }
+
+.searchLabel {
+  display: block;
+  margin-bottom: var(--s-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.searchInput {
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  color: var(--ink-black);
+  background: none;
+  border: 0;
+  border-bottom: 2px solid var(--ink-black);
+  border-radius: 0;
+  padding: var(--s-2) 0;
+  appearance: none;
+}
+
+.searchGo {
+  border: 2px solid var(--ink-black);
+  background: var(--ink-lourdes);
+  color: var(--paper);
+  padding: var(--s-2) var(--s-4);
+  min-height: 44px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-body);
+  cursor: pointer;
+}
+
+.clear {
+  align-self: center;
+  color: var(--ink-lourdes);
+  font-size: 0.9375rem;
+  text-underline-offset: 3px;
+}
+
+.list { margin-top: var(--s-6); border-top: 1px solid var(--paper-edge); }
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--s-2) var(--s-4);
+  padding: var(--s-4) 0;
+  border-bottom: 1px solid var(--paper-edge);
+  text-decoration: none;
+  color: inherit;
+}
+
+.row:hover .rowName { text-decoration: underline; text-underline-offset: 3px; }
+
+.rowRef {
+  margin: 0 0 var(--s-1);
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+}
+
+.rowName {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-lead);
+  line-height: 1.15;
+  color: var(--ink-black);
+}
+
+.rowWhere { margin: var(--s-1) 0 0; font-size: 0.9375rem; color: var(--ink-soft); }
+
+.rowMeta { text-align: right; display: grid; gap: var(--s-1); align-content: start; justify-items: end; }
+
+.rowDate { margin: 0; font-family: var(--font-mono); font-size: var(--text-label); color: var(--ink-soft); white-space: nowrap; }
+
+.badge {
+  padding: 1px var(--s-2);
+  border: 1px solid var(--ink-black);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.badgeUpdated { background: var(--sticker-fill); border-color: var(--sticker-fill); color: var(--sticker-text); }
+
+.empty { margin-top: var(--s-6); font-size: var(--text-body); color: var(--ink-soft); }
+
+.back {
+  display: inline-block;
+  margin: var(--s-5) 0 0;
+  color: var(--ink-lourdes);
+  font-size: var(--text-body);
+  text-underline-offset: 3px;
+}
+
+.docActions { margin-top: var(--s-6); max-width: 340px; }
+
+.notice {
+  margin: var(--s-6) 0 0;
+  padding: var(--s-4);
+  border: 2px dashed var(--error);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+@media print {
+  .page { max-width: none; padding: 0; }
+}

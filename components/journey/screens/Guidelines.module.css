@@ -1,0 +1,41 @@
+.points { margin: var(--s-5) 0 0; padding: 0; list-style: none; counter-reset: point; }
+
+.point {
+  counter-increment: point;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--s-3);
+  padding: var(--s-3) 0;
+  border-bottom: 1px solid var(--paper-edge);
+  font-size: var(--text-body);
+  line-height: 1.5;
+}
+
+.point::before {
+  content: counter(point, decimal-leading-zero);
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  letter-spacing: 0.04em;
+  color: var(--ink-season-text);
+  padding-top: 0.25em;
+}
+
+.dataNote {
+  margin-top: var(--s-6);
+  padding: var(--s-4);
+  background: var(--paper-deep);
+}
+
+.dataNoteTitle {
+  margin: 0 0 var(--s-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.dataNote p { margin: 0 0 var(--s-3); font-size: 0.9375rem; line-height: 1.5; color: var(--ink-black); }
+.dataNote p:last-child { margin-bottom: 0; }
+
+.accept { margin-top: var(--s-5); border-top: 2px dashed var(--paper-edge); padding-top: var(--s-4); }

@@ -15,6 +15,7 @@ export default function Connection({
   onEmail,
   onContinue,
   quiet = false,
+  lockedPhone = false,
 }: {
   phone: string;
   email: string;
@@ -22,6 +23,8 @@ export default function Connection({
   onEmail: (value: string) => void;
   onContinue: () => void;
   quiet?: boolean;
+  /** Update path: the mobile number came from verification and is fixed. */
+  lockedPhone?: boolean;
 }) {
   const [phoneError, setPhoneError] = useState<string>();
   const [emailError, setEmailError] = useState<string>();
@@ -30,7 +33,7 @@ export default function Connection({
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
-    const p = validatePhone(phone);
+    const p = lockedPhone ? undefined : validatePhone(phone);
     const em = validateEmail(email);
     setPhoneError(p);
     setEmailError(em);
@@ -55,6 +58,17 @@ export default function Connection({
       />
 
       <div className={styles.fields}>
+        {lockedPhone ? (
+          <div className={styles.locked}>
+            <span className={styles.lockedLabel}>Mobile, on WhatsApp</span>
+            <span className={styles.lockedValue}>
+              +91 {phone.replace(/\D/g, "").slice(-10)}
+            </span>
+            <p className={styles.lockedNote}>
+              This is the number you verified with. To change it, speak to the LYG committee.
+            </p>
+          </div>
+        ) : (
         <InkField
           label="Mobile, on WhatsApp"
           value={phone}
@@ -71,6 +85,7 @@ export default function Connection({
           enterKeyHint="next"
           placeholder="98765 43210"
         />
+        )}
 
         <Ripple />
 

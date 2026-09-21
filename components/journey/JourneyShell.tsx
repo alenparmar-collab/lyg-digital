@@ -3,23 +3,48 @@
 import { useEffect, useRef, useState } from "react";
 import RegMarks from "@/components/RegMarks";
 import PageStrip from "./PageStrip";
-import NotBuiltYet from "./NotBuiltYet";
 import Welcome from "./screens/Welcome";
+import Verify from "./screens/Verify";
 import Identity from "./screens/Identity";
 import Connection from "./screens/Connection";
+import Community from "./screens/Community";
+import Life from "./screens/Life";
+import Interests from "./screens/Interests";
+import Purpose from "./screens/Purpose";
+import Guardian from "./screens/Guardian";
+import Guidelines from "./screens/Guidelines";
+import Review from "./screens/Review";
+import Done from "./screens/Done";
+import DoneAfterRefresh from "./screens/DoneAfterRefresh";
 import {
+  clearDraft,
   emptyDraft,
   readDraft,
   writeDraft,
   type Draft,
   type RegistrationPath,
 } from "@/lib/registration/draft";
-import type { DateResult } from "@/lib/registration/validate";
+import type { SavedMember } from "@/lib/registration/member";
+import { GUARDIAN_AGE } from "@/lib/registration/constants";
+import { validateDateOfBirth } from "@/lib/registration/validate";
 import styles from "./JourneyShell.module.css";
 
-/** Chapters that carry a page number, in order. "guardian" only counts for
- *  members under 18, which is known as soon as the date of birth is in. */
-const PAGE_ORDER = [
+type Chapter =
+  | "welcome"
+  | "verify"
+  | "identity"
+  | "connection"
+  | "community"
+  | "life"
+  | "interests"
+  | "purpose"
+  | "guardian"
+  | "guidelines"
+  | "review"
+  | "done";
+
+/** Chapters that carry a page number, in order. */
+const PAGE_ORDER: Chapter[] = [
   "welcome",
   "identity",
   "connection",
@@ -29,29 +54,40 @@ const PAGE_ORDER = [
   "purpose",
   "guardian",
   "guidelines",
-] as const;
+  "review",
+];
 
-type Chapter = (typeof PAGE_ORDER)[number] | "verify" | "review" | "done";
+/**
+ * The reference id survives a refresh; nothing else does. It is not member
+ * data and, by design, it cannot retrieve anything, so keeping it is what lets
+ * the page still say "You're registered" and show it after a reload.
+ */
+const REF_KEY = "lyg:last-reference";
 
-function pageNumbers(chapter: Chapter, needsGuardian: boolean) {
-  const order = PAGE_ORDER.filter((s) => s !== "guardian" || needsGuardian);
-  const index = order.indexOf(chapter as (typeof PAGE_ORDER)[number]);
-  return { page: index + 1, total: order.length, numbered: index !== -1 };
-}
-
-export default function JourneyShell({ quiet = false }: { quiet?: boolean }) {
+export default function JourneyShell({
+  logo,
+  quiet = false,
+}: {
+  /** The two-ink mark for the registration document, rendered on the server. */
+  logo: React.ReactNode;
+  quiet?: boolean;
+}) {
   const [chapter, setChapter] = useState<Chapter>("welcome");
   const [draft, setDraft] = useState<Draft>(emptyDraft);
-  const [needsGuardian, setNeedsGuardian] = useState(false);
+  const [member, setMember] = useState<SavedMember | null>(null);
+  const [lastReference, setLastReference] = useState<string | null>(null);
   const [goingBack, setGoingBack] = useState(false);
   const draftLoaded = useRef(false);
   const focusedChapter = useRef<Chapter | null>(null);
   const screenRef = useRef<HTMLDivElement>(null);
 
-  // Restore answers, and the chapter, after a refresh. history.state survives a
-  // reload, so someone who pulls to refresh mid-flow lands back where they were.
   useEffect(() => {
     setDraft(readDraft());
+    try {
+      setLastReference(sessionStorage.getItem(REF_KEY));
+    } catch {
+      // Ignore: the page simply shows no reference.
+    }
     const restored = (history.state as { lygChapter?: Chapter } | null)?.lygChapter;
     if (restored) setChapter(restored);
     else history.replaceState({ ...history.state, lygChapter: "welcome" }, "");
@@ -65,7 +101,6 @@ export default function JourneyShell({ quiet = false }: { quiet?: boolean }) {
     return () => removeEventListener("popstate", onPop);
   }, []);
 
-  // Don't write the empty draft back over a restored one on first render.
   useEffect(() => {
     if (!draftLoaded.current) {
       draftLoaded.current = true;
@@ -74,13 +109,7 @@ export default function JourneyShell({ quiet = false }: { quiet?: boolean }) {
     writeDraft(draft);
   }, [draft]);
 
-  // Move focus to the new chapter so a screen reader announces it instead of
-  // leaving the user on a button that no longer exists.
   useEffect(() => {
-    // Only on a real chapter change. A "first render" flag is not enough:
-    // Strict Mode mounts, cleans up and mounts again, so the flag is already
-    // spent on the second pass and focus jumps on page load. Focusing the
-    // container on load also moves the tab start point past the back control.
     const previous = focusedChapter.current;
     focusedChapter.current = chapter;
     if (previous !== null && previous !== chapter) screenRef.current?.focus();
@@ -96,28 +125,55 @@ export default function JourneyShell({ quiet = false }: { quiet?: boolean }) {
     setChapter(next);
   }
 
-  const { page, total, numbered } = pageNumbers(chapter, needsGuardian);
+  const dobParts = { day: draft.dobDay, month: draft.dobMonth, year: draft.dobYear };
+  const dobCheck = validateDateOfBirth(dobParts);
+  const underage = dobCheck.age !== undefined && dobCheck.age < GUARDIAN_AGE;
+  const isUpdate = draft.path === "update";
+
+  const order = PAGE_ORDER.filter((s) => s !== "guardian" || underage);
+  const index = order.indexOf(chapter);
+  const page = index === -1 ? 1 : index + 1;
+
+  function toggle(key: "interests" | "purpose", value: string) {
+    setDraft((d) => {
+      const list = d[key];
+      return {
+        ...d,
+        [key]: list.includes(value) ? list.filter((v) => v !== value) : [...list, value],
+      };
+    });
+  }
+
+  function finish(saved: SavedMember) {
+    // Answers go; only the reference id is kept.
+    clearDraft();
+    try {
+      sessionStorage.setItem(REF_KEY, saved.reference_id);
+    } catch {
+      // Ignore.
+    }
+    setLastReference(saved.reference_id);
+    setMember(saved);
+    go("done");
+  }
 
   return (
     <main className={styles.page}>
       <RegMarks />
 
-      <div className={styles.top}>
-        {numbered ? (
+      {chapter !== "done" ? (
+        <div className={styles.top}>
           <PageStrip
             page={page}
-            total={total}
+            total={order.length}
             backHref={chapter === "welcome" ? "/" : undefined}
             onBack={() => history.back()}
           />
-        ) : (
-          <PageStrip page={1} total={total} onBack={() => history.back()} />
-        )}
-        {/* A mono tag, not the mark. At the size this corner allows, the
-            logo's ring text is unreadable and it reads as a smudge; the words
-            do the orientation job the mark cannot do small. */}
-        <p className={styles.tag}>LYG 2026</p>
-      </div>
+          <p className={styles.tag}>LYG 2026</p>
+        </div>
+      ) : (
+        <div />
+      )}
 
       <div className={styles.body}>
         <div
@@ -129,21 +185,36 @@ export default function JourneyShell({ quiet = false }: { quiet?: boolean }) {
           {chapter === "welcome" && (
             <Welcome
               path={draft.path}
-              onChange={(path: RegistrationPath) => update({ path })}
+              onChange={(path: RegistrationPath) => update({ path, verified: false })}
               onContinue={() => go(draft.path === "update" ? "verify" : "identity")}
+            />
+          )}
+
+          {chapter === "verify" && (
+            <Verify
+              phone={draft.phone}
+              dob={dobParts}
+              onPhone={(phone) => update({ phone })}
+              onDob={(v) => update({ dobDay: v.day, dobMonth: v.month, dobYear: v.year })}
+              onVerified={() => {
+                update({ verified: true });
+                go("identity");
+              }}
+              onRegisterInstead={() => {
+                update({ path: "new", verified: false });
+                go("identity");
+              }}
             />
           )}
 
           {chapter === "identity" && (
             <Identity
               fullName={draft.fullName}
-              dob={{ day: draft.dobDay, month: draft.dobMonth, year: draft.dobYear }}
+              dob={dobParts}
               onFullName={(fullName) => update({ fullName })}
               onDob={(v) => update({ dobDay: v.day, dobMonth: v.month, dobYear: v.year })}
-              onContinue={(result: DateResult) => {
-                setNeedsGuardian(Boolean(result.needsGuardian));
-                go("connection");
-              }}
+              onContinue={() => go("connection")}
+              lockedDob={isUpdate && draft.verified}
             />
           )}
 
@@ -155,24 +226,99 @@ export default function JourneyShell({ quiet = false }: { quiet?: boolean }) {
               onEmail={(email) => update({ email })}
               onContinue={() => go("community")}
               quiet={quiet}
-            />
-          )}
-
-          {chapter === "verify" && (
-            <NotBuiltYet
-              chapter={1}
-              name="Welcome back"
-              what="Verifying a returning member needs the database, so this chapter is not built. It will ask for the mobile number and date of birth on file and check both on the server."
+              lockedPhone={isUpdate && draft.verified}
             />
           )}
 
           {chapter === "community" && (
-            <NotBuiltYet
-              chapter={4}
-              name="Community"
-              what="Area, then the communities inside it. Not built: the areas and communities come from the parish list, which has not arrived yet."
+            <Community
+              area={draft.area}
+              community={draft.community}
+              onArea={(area) => update({ area })}
+              onCommunity={(community) => update({ community })}
+              onContinue={() => go("life")}
+              quiet={quiet}
             />
           )}
+
+          {chapter === "life" && (
+            <Life
+              currentStatus={draft.currentStatus}
+              place={draft.institutionOrWorkplace}
+              previous={draft.previousYouthGroup}
+              previousDetails={draft.previousYouthGroupDetails}
+              onStatus={(currentStatus) => update({ currentStatus })}
+              onPlace={(institutionOrWorkplace) => update({ institutionOrWorkplace })}
+              onPrevious={(previousYouthGroup) => update({ previousYouthGroup })}
+              onPreviousDetails={(previousYouthGroupDetails) =>
+                update({ previousYouthGroupDetails })
+              }
+              onContinue={() => go("interests")}
+            />
+          )}
+
+          {chapter === "interests" && (
+            <Interests
+              values={draft.interests}
+              onToggle={(v) => toggle("interests", v)}
+              onContinue={() => go("purpose")}
+              quiet={quiet}
+            />
+          )}
+
+          {chapter === "purpose" && (
+            <Purpose
+              values={draft.purpose}
+              onToggle={(v) => toggle("purpose", v)}
+              onContinue={() => go(underage ? "guardian" : "guidelines")}
+            />
+          )}
+
+          {chapter === "guardian" && (
+            <Guardian
+              name={draft.guardianName}
+              phone={draft.guardianPhone}
+              consent={draft.guardianConsent}
+              onName={(guardianName) => update({ guardianName })}
+              onPhone={(guardianPhone) => update({ guardianPhone })}
+              onConsent={(guardianConsent) => update({ guardianConsent })}
+              onContinue={() => go("guidelines")}
+            />
+          )}
+
+          {chapter === "guidelines" && (
+            <Guidelines
+              accepted={draft.guidelinesAccepted}
+              onAccepted={(guidelinesAccepted) => update({ guidelinesAccepted })}
+              onContinue={() => go("review")}
+            />
+          )}
+
+          {chapter === "review" && (
+            <Review
+              draft={draft}
+              underage={underage}
+              onEdit={(step) => go(step as Chapter)}
+              onDone={finish}
+              onDuplicate={() => {
+                update({ path: "update", verified: false });
+                go("verify");
+              }}
+              onVerifyAgain={() => {
+                update({ verified: false });
+                go("verify");
+              }}
+            />
+          )}
+
+          {chapter === "done" &&
+            (member ? (
+              <Done member={member} logo={logo} />
+            ) : (
+              // Reached by a refresh: the saved row was never stored, so there
+              // is nothing to rebuild the document from.
+              <DoneAfterRefresh referenceId={lastReference} />
+            ))}
         </div>
       </div>
     </main>

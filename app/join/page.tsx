@@ -1,3 +1,4 @@
+import Logo from "@/components/Logo";
 import JourneyShell from "@/components/journey/JourneyShell";
 import { resolveSeason } from "@/lib/season";
 
@@ -8,6 +9,13 @@ export const metadata = {
 export default function JoinPage() {
   const season = resolveSeason(null);
 
-  // Jokes stop from Holy Thursday to Holy Saturday.
-  return <JourneyShell quiet={season === "triduum"} />;
+  return (
+    <JourneyShell
+      // Logo reads the SVG from disk, so it renders here on the server and
+      // travels into the client wizard as an element.
+      logo={<Logo variant="two-ink" width="56px" decorative />}
+      // Jokes stop from Holy Thursday to Holy Saturday.
+      quiet={season === "triduum"}
+    />
+  );
 }

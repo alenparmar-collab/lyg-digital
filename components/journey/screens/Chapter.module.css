@@ -26,3 +26,54 @@
   .fields { gap: var(--s-8); max-width: 34rem; }
   .actions > a, .actions > button { width: auto; min-width: 340px; justify-self: start; }
 }
+
+.notice {
+  margin: 0 0 var(--s-3);
+  padding-left: var(--s-4);
+  border-left: 2px solid var(--error);
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  color: var(--ink-black);
+}
+
+.plainLink {
+  display: inline-block;
+  margin: 0 0 var(--s-2);
+  padding: var(--s-2) 0;
+  border: 0;
+  background: none;
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  color: var(--ink-lourdes);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+/* A value carried over from an earlier page and not editable here. */
+.locked { display: block; }
+
+.lockedLabel {
+  display: block;
+  margin-bottom: var(--s-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.lockedValue {
+  display: block;
+  padding: var(--s-2) 0;
+  border-bottom: 2px dashed var(--paper-edge);
+  font-size: var(--text-lead);
+  color: var(--ink-soft);
+}
+
+.lockedNote {
+  margin: var(--s-2) 0 0;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: var(--ink-soft);
+}

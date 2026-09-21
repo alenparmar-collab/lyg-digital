@@ -1,0 +1,94 @@
+.done { position: relative; }
+
+.kicker {
+  margin: 0 0 var(--s-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+/* The one moment after the cover that is allowed to be loud. */
+.headline {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--text-h1);
+  line-height: 0.85;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+  color: var(--ink-lourdes);
+  isolation: isolate;
+}
+
+.welcome {
+  margin: var(--s-5) 0 0;
+  font-family: var(--font-serif);
+  font-size: var(--text-h3);
+  line-height: 1.15;
+  color: var(--ink-black);
+  max-width: 24ch;
+}
+
+.refBlock {
+  margin-top: var(--s-6);
+  padding: var(--s-4) 0;
+  border-top: 2px dashed var(--paper-edge);
+  border-bottom: 2px dashed var(--paper-edge);
+}
+
+.refLabel {
+  margin: 0 0 var(--s-1);
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.refValue {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+  letter-spacing: 0.06em;
+  color: var(--ink-black);
+}
+
+.actions { margin-top: var(--s-6); display: grid; gap: var(--s-3); }
+
+.sendNote {
+  margin: var(--s-4) 0 0;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--ink-black);
+}
+
+.contact {
+  margin: var(--s-2) 0 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
+}
+
+/* ---------- the document, revealed in place ---------- */
+.documentWrap { margin-top: var(--s-7); }
+
+.docBack {
+  margin-bottom: var(--s-4);
+  border: 0;
+  background: none;
+  padding: var(--s-2) 0;
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  color: var(--ink-lourdes);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+@media (min-width: 760px) {
+  .actions { grid-template-columns: repeat(2, minmax(0, 260px)); }
+  .actions > * { width: auto; }
+}

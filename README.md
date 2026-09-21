@@ -9,22 +9,25 @@ Ordinary Time design system in `.claude/skills/ordinary-time/`.
 
 ## Status
 
-Built so far:
+Lean V1. The member registration flow, the database, the registration document
+and the committee viewer are built. Nothing has been run against a live
+database yet: `supabase/migrations/0001_lean_v1.sql` still needs to be run, and
+this deployment has no Supabase environment variables.
 
-- Visual shell: design tokens, fonts, liturgical season helper, the logo
-  component, and the cover screen.
-- The first three chapters of the registration journey at `/join`: WELCOME
-  (join or update), IDENTITY (name and date of birth) and CONNECTION (mobile
-  and email), with client-side validation and answers kept in sessionStorage.
+How the data flows:
 
-Not built yet: COMMUNITY, LIFE, INTERESTS, PURPOSE, the guardian chapter,
-GUIDELINES, REVIEW, the completion screen, returning-member verification, the
-database, submission, and the admin member record. Chapters that are not built
-render a panel that says so. Nothing in this repo talks to Supabase yet.
-
-Screen order: WELCOME, IDENTITY, CONNECTION, COMMUNITY, LIFE, INTERESTS,
-PURPOSE, the guardian chapter for under-18s, GUIDELINES, REVIEW, and the
-completion screen. Returning-member verification follows WELCOME.
+- The browser never touches Supabase. Registration goes through the server
+  actions in `app/actions/registration.ts`; the committee viewer reads in
+  server components. Both use the service role key, which stays on the server.
+- RLS is enabled on `members` and `update_attempts` with no policies, and the
+  table grants are revoked from `anon` and `authenticated`, so the anon key
+  reaches nothing.
+- Every field is validated again on the server with zod, whatever the browser
+  checked. Age is recalculated in Asia/Kolkata on every submission, and a
+  member under 18 is rejected unless guardian name, phone and consent are all
+  present.
+- A reference id is shown to the member and is never a way to fetch anything.
+  There is no public route that returns member data.
 
 ## Running it locally
 
