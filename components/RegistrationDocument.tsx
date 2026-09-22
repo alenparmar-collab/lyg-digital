@@ -189,9 +189,7 @@ export default function RegistrationDocument({
       <footer className={styles.footer}>
         <p className={styles.verse}>
           {JOHN_15_15.text}
-          <span className={styles.verseRef}>
-            {JOHN_15_15.reference} · {JOHN_15_15.translation}
-          </span>
+          <span className={styles.verseRef}>{JOHN_15_15.reference}</span>
         </p>
         <p className={styles.footNote}>
           <span>Lourdes Youth Group · CTM Parish, Ahmedabad</span>

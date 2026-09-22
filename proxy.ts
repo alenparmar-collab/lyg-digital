@@ -1,79 +1,55 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { createServerClient } from "@supabase/ssr";
+import { committeeConfig } from "@/lib/committee/config";
+import { COMMITTEE_COOKIE, verifySession } from "@/lib/committee/session";
 
 /**
- * First gate on /committee. It refreshes the Supabase session cookie and turns
- * anyone away who is not signed in or not on COMMITTEE_EMAILS.
+ * First gate on /committee. It turns away anyone whose session cookie is
+ * missing, forged or expired, before the request reaches a page that reads
+ * member data.
  *
  * Next.js 16 calls this a proxy rather than middleware. Its own docs say a
- * proxy is for optimistic checks and not a session or authorization solution,
- * which is exactly how it is used here: every committee page and action calls
+ * proxy is for optimistic checks and not an authorization solution, which is
+ * exactly how it is used here: every committee page and action calls
  * requireCommittee() again on the server. This layer is a convenience and
  * never the last word.
+ *
+ * Proxy runs on the Node.js runtime in Next 16, so this shares the same
+ * node:crypto verification the pages use rather than a second implementation.
  */
 
-const PUBLIC = ["/committee/login", "/committee/auth"];
+const LOGIN = "/committee/login";
 
-function allowed(email: string | null | undefined): boolean {
-  if (!email) return false;
-  const list = (process.env.COMMITTEE_EMAILS ?? "")
-    .split(",")
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean);
-  return list.includes(email.trim().toLowerCase());
+function isLogin(pathname: string): boolean {
+  return pathname === LOGIN || pathname.startsWith(`${LOGIN}/`);
 }
 
-export async function proxy(request: NextRequest) {
-  const response = NextResponse.next({ request });
+function to(request: NextRequest, pathname: string, search = "") {
+  const url = request.nextUrl.clone();
+  url.pathname = pathname;
+  url.search = search;
+  return NextResponse.redirect(url);
+}
 
-  const path0 = request.nextUrl.pathname;
-  const isPublic0 = PUBLIC.some((p) => path0 === p || path0.startsWith(`${p}/`));
+export function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  const onLogin = isLogin(pathname);
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key) {
-    // Not configured means nobody can be authenticated, so committee routes are
-    // closed rather than open. Failing open here would expose the viewer to
-    // anyone the moment an environment variable went missing.
-    if (isPublic0) return response;
-    const to = request.nextUrl.clone();
-    to.pathname = "/committee/login";
-    to.search = "?unconfigured=1";
-    return NextResponse.redirect(to);
+  const config = committeeConfig();
+  if (!config) {
+    // Not configured means nobody can be signed in, so committee routes are
+    // closed rather than open. Failing open here would expose every member
+    // record the moment an environment variable went missing.
+    return onLogin ? NextResponse.next() : to(request, LOGIN, "?unconfigured=1");
   }
 
-  const supabase = createServerClient(url, key, {
-    cookies: {
-      getAll: () => request.cookies.getAll(),
-      setAll: (list) => {
-        for (const { name, value, options } of list) response.cookies.set(name, value, options);
-      },
-    },
-  });
+  const signedIn = verifySession(request.cookies.get(COMMITTEE_COOKIE)?.value, config.secret);
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  if (!signedIn && !onLogin) return to(request, LOGIN);
 
-  const path = request.nextUrl.pathname;
-  const isPublic = PUBLIC.some((p) => path === p || path.startsWith(`${p}/`));
+  // Someone already signed in has no reason to sit on the login page.
+  if (signedIn && onLogin) return to(request, "/committee");
 
-  if (!isPublic && !allowed(user?.email)) {
-    const to = request.nextUrl.clone();
-    to.pathname = "/committee/login";
-    to.search = user ? "?denied=1" : "";
-    return NextResponse.redirect(to);
-  }
-
-  // A signed-in committee member has no reason to sit on the login page.
-  if (path === "/committee/login" && allowed(user?.email)) {
-    const to = request.nextUrl.clone();
-    to.pathname = "/committee";
-    to.search = "";
-    return NextResponse.redirect(to);
-  }
-
-  return response;
+  return NextResponse.next();
 }
 
 export const config = {

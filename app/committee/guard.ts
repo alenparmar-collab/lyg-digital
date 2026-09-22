@@ -1,26 +1,26 @@
 import "server-only";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { authClient } from "@/lib/supabase/server";
-import { isCommitteeEmail } from "@/lib/committee/access";
+import { committeeConfig } from "@/lib/committee/config";
+import { COMMITTEE_COOKIE, verifySession } from "@/lib/committee/session";
 
 /**
  * The check that actually protects committee data. Called at the top of every
- * committee page and action, after the middleware has already had a go.
- * Returns the signed-in email, or redirects.
+ * committee page and every committee action, after the proxy has already had a
+ * go. The proxy is a convenience and never the last word: this runs again on
+ * the server for each request that reaches real data.
+ *
+ * Returns the signed-in mobile number, or redirects. It never returns on the
+ * failure paths.
  */
 export async function requireCommittee(): Promise<string> {
-  let user: { email?: string | null } | null = null;
-  try {
-    const supabase = await authClient();
-    ({
-      data: { user },
-    } = await supabase.auth.getUser());
-  } catch {
-    // Supabase not configured. Closed, not open, and not a 500.
-    redirect("/committee/login?unconfigured=1");
-  }
+  const config = committeeConfig();
+  if (!config) redirect("/committee/login?unconfigured=1");
 
-  if (!user) redirect("/committee/login");
-  if (!isCommitteeEmail(user.email)) redirect("/committee/login?denied=1");
-  return user.email as string;
+  const store = await cookies();
+  const cookie = store.get(COMMITTEE_COOKIE)?.value;
+
+  if (!verifySession(cookie, config.secret)) redirect("/committee/login");
+
+  return config.phone;
 }

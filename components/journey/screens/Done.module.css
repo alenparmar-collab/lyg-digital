@@ -72,8 +72,23 @@
   color: var(--ink-soft);
 }
 
+.contactLink {
+  color: var(--ink-lourdes);
+  text-underline-offset: 3px;
+  white-space: nowrap;
+}
+
 /* ---------- the document, revealed in place ---------- */
 .documentWrap { margin-top: var(--s-7); }
+
+/* The same sheet, kept in the DOM while the welcome half is on screen so the
+   browser's own Print has something to print. Off screen, never read out, and
+   revealed only on the printed page. */
+.documentForPrint { display: none; }
+
+@media print {
+  .documentForPrint { display: block; }
+}
 
 .docBack {
   margin-bottom: var(--s-4);

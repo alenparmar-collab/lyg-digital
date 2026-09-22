@@ -1,0 +1,47 @@
+.wrap {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.error {
+  font-size: 0.9375rem;
+  line-height: 1.4;
+  color: var(--error);
+}
+
+/* The quiet variant, for a row in the committee list. */
+.linkWrap {
+  display: grid;
+  gap: var(--s-1);
+  justify-items: end;
+}
+
+.link {
+  min-height: 44px;
+  padding: var(--s-2) 0 var(--s-2) var(--s-3);
+  border: 0;
+  background: none;
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-lourdes);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.link:disabled {
+  color: var(--ink-soft);
+  cursor: default;
+  text-decoration: none;
+}
+
+.linkError {
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  color: var(--error);
+  text-align: right;
+  white-space: normal;
+}

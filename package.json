@@ -7,10 +7,11 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "icons": "sed -e 's/var(--logo-ink, #1B1A17)/#2447A8/g' public/brand/lyg-logo-one-ink.svg > app/icon.svg"
+    "icons": "sed -e 's/var(--logo-ink, #1B1A17)/#2447A8/g' public/brand/lyg-logo-one-ink.svg > app/icon.svg",
+    "pdf:samples": "esbuild scripts/generate-sample-pdfs.tsx --bundle --platform=node --format=esm --packages=external --alias:@=. --outfile=tmp/gen-samples.mjs --log-level=warning && node tmp/gen-samples.mjs"
   },
   "dependencies": {
-    "@supabase/ssr": "0.12.7",
+    "@react-pdf/renderer": "^4.9.0",
     "@supabase/supabase-js": "2.116.0",
     "next": "16.3.5",
     "react": "19.3.0",
@@ -21,6 +22,7 @@
     "@types/node": "22.19.1",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
+    "esbuild": "^0.28.2",
     "playwright-core": "^1.57.0",
     "typescript": "5.9.3"
   }
