@@ -96,27 +96,27 @@
 
 .note { margin: 0 0 0 var(--s-1); }
 
-/* The quietest line on the cover: the committee's way in on the left, the
-   printer's mark on the right, both at the same size and in the same ink. */
-.smallprint {
-  margin: var(--s-2) 0 0;
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--s-4);
-  padding-right: var(--s-7);
-}
+/* The committee's way in. Plain body text in the parish blue, underlined:
+   a link, not a second button. No fill and no print shadow, because the one
+   filled, shadowed thing on this page must stay "Pull up a chair".
+   The 44px tap target supplies its own breathing room above and below the
+   text, so the wrapper adds no margin of its own: the footer grows by the
+   target and nothing more. */
+.committeeRow { margin: 0; }
 
 .committee {
-  font-family: var(--font-mono);
-  font-size: var(--text-label);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--ink-soft);
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  line-height: 1.4;
+  color: var(--ink-lourdes);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
 
+/* The printer's mark, unchanged: the quietest line on the cover. */
 .printline {
   margin: 0;
   font-family: var(--font-mono);
@@ -125,6 +125,7 @@
   text-transform: uppercase;
   color: var(--ink-soft);
   text-align: right;
+  padding-right: var(--s-7);
 }
 
 /* ---------- tall phones: don't let the empty paper become a chasm ---------- */
@@ -159,5 +160,7 @@
     min-width: 340px;
     justify-self: start;
   }
-  .smallprint { grid-row: 1; grid-column: 2; padding-right: 0; justify-content: flex-end; gap: var(--s-5); }
+  /* The mark keeps its corner; the link stays under the button. */
+  .printline { grid-row: 1; grid-column: 2; padding-right: 0; }
+  .committeeRow { grid-row: 3; grid-column: 1 / -1; }
 }

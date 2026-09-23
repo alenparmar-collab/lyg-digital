@@ -52,17 +52,20 @@ export default function CoverPage() {
 
         <StampButton href="/join">Pull up a chair</StampButton>
 
-        <div className={styles.smallprint}>
-          {/* The committee's way in. Deliberately the quietest thing on the
-              page, and only on this page: it never appears on the journey,
-              the completion screen or the registration document. */}
+        {/* The committee's way in, and only on this page: it never appears on
+            the journey, the completion screen or the registration document.
+            Below "Pull up a chair" and styled as a link rather than a button,
+            so nobody arriving from a QR poster mistakes it for the way to
+            register. Wrapped, because .foot > a is the primary button's rule. */}
+        <div className={styles.committeeRow}>
           <Link className={styles.committee} href="/committee">
-            Committee
+            Committee login
           </Link>
-          <p className={styles.printline}>
-            Printed in {seasonLabel[season]}, {year}
-          </p>
         </div>
+
+        <p className={styles.printline}>
+          Printed in {seasonLabel[season]}, {year}
+        </p>
       </footer>
     </main>
   );
