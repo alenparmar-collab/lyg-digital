@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { committeeConfig } from "@/lib/committee/config";
-import { COMMITTEE_COOKIE, verifySession } from "@/lib/committee/session";
+import { committeeAccess, findUser } from "@/lib/committee/users";
+import { COMMITTEE_COOKIE, readSession } from "@/lib/committee/session";
 
 /**
  * First gate on /committee. It turns away anyone whose session cookie is
@@ -18,9 +18,15 @@ import { COMMITTEE_COOKIE, verifySession } from "@/lib/committee/session";
  */
 
 const LOGIN = "/committee/login";
+const SUMMARY = "/committee";
 
 function isLogin(pathname: string): boolean {
   return pathname === LOGIN || pathname.startsWith(`${LOGIN}/`);
+}
+
+/** The only committee page a summary-only person may open. */
+function isSummaryOnlyPath(pathname: string): boolean {
+  return pathname === SUMMARY || pathname === `${SUMMARY}/`;
 }
 
 function to(request: NextRequest, pathname: string, search = "") {
@@ -34,20 +40,31 @@ export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const onLogin = isLogin(pathname);
 
-  const config = committeeConfig();
-  if (!config) {
+  const access = committeeAccess();
+  if (!access.ok) {
     // Not configured means nobody can be signed in, so committee routes are
     // closed rather than open. Failing open here would expose every member
-    // record the moment an environment variable went missing.
+    // record the moment an environment variable went missing or the list was
+    // mistyped.
     return onLogin ? NextResponse.next() : to(request, LOGIN, "?unconfigured=1");
   }
 
-  const signedIn = verifySession(request.cookies.get(COMMITTEE_COOKIE)?.value, config.secret);
+  // Signed by this server, still in date, still someone on the list, and with
+  // a view that still matches the list. A cookie that disagrees is stale.
+  const claims = readSession(request.cookies.get(COMMITTEE_COOKIE)?.value, access.secret);
+  const user = claims && findUser(access.users, claims.name, claims.fingerprint);
+  const signedIn = Boolean(claims && user && claims.view === user.view);
 
   if (!signedIn && !onLogin) return to(request, LOGIN);
 
   // Someone already signed in has no reason to sit on the login page.
-  if (signedIn && onLogin) return to(request, "/committee");
+  if (signedIn && onLogin) return to(request, SUMMARY);
+
+  // Summary-only people get the summary and nothing that names a member. The
+  // pages and the download action check this again on the server.
+  if (signedIn && user && user.view === "summary" && !isSummaryOnlyPath(pathname)) {
+    return to(request, SUMMARY);
+  }
 
   return NextResponse.next();
 }

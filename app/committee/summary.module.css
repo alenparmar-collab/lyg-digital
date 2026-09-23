@@ -1,0 +1,240 @@
+/* The registration summary, built as a sheet of paper rather than a dashboard.
+   Flat blocks of season ink, mono labels, the key numbers set large in the
+   display face. No cards, no shadows, no gradients, no icons. */
+
+.page {
+  position: relative;
+  min-height: 100svh;
+  max-width: 940px;
+  margin-inline: auto;
+  padding: var(--s-6) var(--s-4) var(--s-8);
+}
+
+.actions { margin-top: var(--s-5); }
+
+.toList {
+  color: var(--ink-lourdes);
+  font-size: var(--text-body);
+  text-underline-offset: 3px;
+}
+
+.sheet {
+  margin-top: var(--s-6);
+  color: var(--ink-black);
+}
+
+/* ---------- masthead ---------- */
+.masthead {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: var(--s-4);
+  padding-bottom: var(--s-4);
+  border-bottom: 2px solid var(--ink-black);
+}
+
+.logo { --logo-accent: var(--ink-season); --logo-ink: var(--ink-black); flex: none; }
+
+.org {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.375rem;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+
+.parish,
+.docTitle {
+  margin: var(--s-1) 0 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.docTitle { color: var(--ink-season-text); letter-spacing: 0.12em; }
+
+/* ---------- the two big numbers ---------- */
+.headline {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-4);
+  padding: var(--s-5) 0;
+  border-bottom: 1px solid var(--paper-edge);
+}
+
+.figureNum {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(3rem, 14vw, 4.5rem);
+  line-height: 0.85;
+  letter-spacing: -0.03em;
+  color: var(--ink-lourdes);
+}
+
+.figureLabel {
+  margin: var(--s-2) 0 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+/* ---------- the two splits ---------- */
+.splits {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-5);
+  padding: var(--s-5) 0;
+  border-bottom: 1px solid var(--paper-edge);
+}
+
+.splitTitle,
+.sectionTitle {
+  margin: 0 0 var(--s-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-season-text);
+}
+
+.splitRows { margin: 0; display: grid; gap: var(--s-2); }
+
+.splitRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--s-3);
+  align-items: baseline;
+  font-size: 0.9375rem;
+}
+
+.splitRow dt { margin: 0; color: var(--ink-black); }
+
+.splitRow dd {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 1.125rem;
+  color: var(--ink-black);
+}
+
+/* ---------- bar sections ---------- */
+.section { padding: var(--s-5) 0 0; break-inside: avoid; }
+
+.bars { display: grid; gap: var(--s-2); }
+
+.barRow {
+  display: grid;
+  grid-template-columns: 9rem 1fr 2.5rem;
+  gap: var(--s-3);
+  align-items: center;
+}
+
+.barLabel {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+/* A rule the block sits on, so a short bar still reads as a measurement. */
+.barTrack {
+  min-width: 0;
+  height: 14px;
+  border-bottom: 1px solid var(--paper-edge);
+  display: flex;
+  align-items: stretch;
+}
+
+/* Flat ink. A shape, never a label, so the season fill is the right ink here. */
+.barFill { background: var(--ink-season); }
+
+/* Other is the same block, quieter, so it never looks like the biggest group. */
+.barFillOther { background: var(--paper-edge); }
+
+.barOther .barLabel { color: var(--ink-soft); font-style: italic; }
+
+.barCount {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.9375rem;
+  text-align: right;
+  color: var(--ink-black);
+}
+
+.none { margin: 0; font-size: 0.9375rem; color: var(--ink-soft); }
+
+/* ---------- footer ---------- */
+.footer {
+  margin-top: var(--s-6);
+  padding-top: var(--s-4);
+  border-top: 2px solid var(--ink-black);
+  display: grid;
+  gap: var(--s-2);
+  break-inside: avoid;
+}
+
+.footNote {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  letter-spacing: 0.04em;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
+.notice {
+  margin: var(--s-5) 0 0;
+  padding: var(--s-4);
+  border: 2px dashed var(--error);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+@media (min-width: 700px) {
+  .barRow { grid-template-columns: 12rem 1fr 3rem; }
+}
+
+/* ---------- one A4 page ----------
+   Father will want this on paper at a meeting, so everything is sized to land
+   on a single sheet: tighter spacing, point sizes, and no section allowed to
+   break across a page. */
+@media print {
+  .page { max-width: none; min-height: 0; padding: 0; }
+  .sheet { margin-top: 0; font-size: 9.5pt; }
+
+  .masthead { gap: 12px; padding-bottom: 8px; }
+  .masthead .logo svg { width: 40px !important; height: auto; }
+  .org { font-size: 15pt; }
+  .parish, .docTitle { margin-top: 2px; font-size: 7pt; }
+
+  .headline { gap: 12px; padding: 10px 0; }
+  .figureNum { font-size: 34pt; }
+  .figureLabel { margin-top: 2px; font-size: 7pt; }
+
+  .splits { gap: 16px; padding: 10px 0; }
+  .splitTitle, .sectionTitle { margin-bottom: 4px; font-size: 7.5pt; letter-spacing: 0.08em; }
+  .splitRows { gap: 2px; }
+  .splitRow { font-size: 9pt; }
+  .splitRow dd { font-size: 10pt; }
+
+  .section { padding-top: 9px; }
+  .bars { gap: 3px; }
+  .barRow { grid-template-columns: 10rem 1fr 2.2rem; gap: 8px; }
+  .barLabel { font-size: 8pt; }
+  .barTrack { height: 9px; }
+  .barCount { font-size: 8pt; }
+
+  .footer { margin-top: 10px; padding-top: 7px; gap: 3px; }
+  .footNote { font-size: 7pt; line-height: 1.35; }
+
+  /* The ink blocks are the whole point of the sheet, so keep them in print. */
+  .barFill, .barFillOther {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
