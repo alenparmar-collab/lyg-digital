@@ -1,10 +1,10 @@
 "use server";
 
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { requireFullAccess } from "./guard";
 import { committeeAccess } from "@/lib/committee/users";
-import { loginGate, recordLoginFailure } from "@/lib/committee/attempts";
+import { clientIp, loginGate, recordLoginFailure } from "@/lib/committee/attempts";
 import {
   COMMITTEE_COOKIE,
   COMMITTEE_COOKIE_PATH,
@@ -19,9 +19,13 @@ import type { CommitteeUser } from "@/lib/committee/users";
 
 export type LoginResult = { ok: false; message: string };
 
-/** One message for a wrong number and a wrong password alike. */
+/**
+ * One message for a wrong number, a wrong password and a rate-limited attempt
+ * alike. Which of the two limits was hit, and whether a limit was hit at all,
+ * are things an attacker would like to know and a committee member does not
+ * need to be told apart from a typo.
+ */
 const NO_MATCH = "That didn't match.";
-const LOCKED = "Too many tries. Wait 15 minutes and try again.";
 const UNCONFIGURED = "Committee access isn't configured.";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -40,19 +44,27 @@ export async function committeeLogin(
     return { ok: false, message: "Enter your mobile number and password." };
   }
 
-  // The limit is checked before the credentials, so a locked login costs an
-  // attacker a request and tells them nothing about what they typed. A missing
-  // login_attempts table closes the door rather than opening it.
-  const gate = await loginGate();
+  // Typed the way people actually type a number; stored and compared as E.164.
+  const normalised = normalisePhone(typedPhone);
+
+  // Vercel sets this itself, so it cannot be spoofed. Without it the limit
+  // cannot be enforced, and loginGate refuses rather than counting nothing.
+  const ip = clientIp(await headers());
+
+  // The limits are checked before the credentials, so a refused attempt costs
+  // an attacker a request and tells them nothing about what they typed. A
+  // missing login_attempts table closes the door rather than opening it.
+  const gate = await loginGate(normalised, ip);
   if (!gate.ok) {
-    return { ok: false, message: gate.reason === "locked" ? LOCKED : UNCONFIGURED };
+    if (gate.reason === "unconfigured") return { ok: false, message: UNCONFIGURED };
+    // Deliberately the same wording as a wrong password.
+    return { ok: false, message: NO_MATCH };
   }
 
-  // Typed the way people actually type a number; stored and compared as E.164.
   // A number that is not a valid mobile at all still gets compared, against a
   // value it cannot equal, so an unparseable number costs the same time as a
   // parseable one.
-  const phone = normalisePhone(typedPhone) ?? "\u0000not-a-number";
+  const phone = normalised ?? "\u0000not-a-number";
 
   // Every entry is compared, and both halves of every entry are compared, with
   // no early exit. How long this takes therefore reveals neither which entry
@@ -65,7 +77,7 @@ export async function committeeLogin(
   }
 
   if (!matched) {
-    await recordLoginFailure();
+    await recordLoginFailure(normalised, ip);
     return { ok: false, message: NO_MATCH };
   }
 

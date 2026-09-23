@@ -36,6 +36,26 @@
   color: var(--ink-black);
 }
 
+/* Being already registered is not a mistake, so it is not marked up as one:
+   the parish blue, not the error red. */
+.noticeInfo {
+  margin: 0 0 var(--s-3);
+  padding-left: var(--s-4);
+  border-left: 2px solid var(--ink-lourdes);
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  color: var(--ink-black);
+}
+
+.noticeAction { margin: 0 0 var(--s-3); max-width: 320px; }
+
+.noticeAside {
+  margin: 0 0 var(--s-3);
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+
 .plainLink {
   display: inline-block;
   margin: 0 0 var(--s-2);

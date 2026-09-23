@@ -8,6 +8,7 @@ import type { SavedMember } from "@/lib/registration/member";
 import { INTERESTS, PURPOSE, labelFor, statusLabel } from "@/lib/registration/options";
 import { draftToSubmission, type Draft } from "@/lib/registration/draft";
 import chapter from "./Chapter.module.css";
+import { formatIndianMobile, normalisePhone } from "@/lib/registration/validate";
 import styles from "./Review.module.css";
 
 type Section = { title: string; step: string; rows: [string, React.ReactNode][] };
@@ -46,7 +47,7 @@ export default function Review({
       title: "Contact",
       step: "connection",
       rows: [
-        ["Mobile", `+91 ${draft.phone.replace(/\D/g, "").slice(-10)}`],
+        ["Mobile", formatIndianMobile(normalisePhone(draft.phone) ?? draft.phone)],
         ["Email", draft.email || <span className={styles.none}>Not given</span>],
       ],
     },
@@ -109,7 +110,7 @@ export default function Review({
             step: "guardian",
             rows: [
               ["Name", draft.guardianName],
-              ["Mobile", `+91 ${draft.guardianPhone.replace(/\D/g, "").slice(-10)}`],
+              ["Mobile", formatIndianMobile(normalisePhone(draft.guardianPhone) ?? draft.guardianPhone)],
               ["Consent", draft.guardianConsent ? "Given" : "Not given"],
             ] as [string, React.ReactNode][],
           },

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Logo from "@/components/Logo";
 import RegMarks from "@/components/RegMarks";
 import StampButton from "@/components/StampButton";
@@ -51,9 +52,17 @@ export default function CoverPage() {
 
         <StampButton href="/join">Pull up a chair</StampButton>
 
-        <p className={styles.printline}>
-          Printed in {seasonLabel[season]}, {year}
-        </p>
+        <div className={styles.smallprint}>
+          {/* The committee's way in. Deliberately the quietest thing on the
+              page, and only on this page: it never appears on the journey,
+              the completion screen or the registration document. */}
+          <Link className={styles.committee} href="/committee">
+            Committee
+          </Link>
+          <p className={styles.printline}>
+            Printed in {seasonLabel[season]}, {year}
+          </p>
+        </div>
       </footer>
     </main>
   );

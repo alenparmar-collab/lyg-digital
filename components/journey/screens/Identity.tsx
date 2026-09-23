@@ -18,6 +18,7 @@ export default function Identity({
   onDob,
   onContinue,
   lockedDob = false,
+  notice,
 }: {
   fullName: string;
   dob: { day: string; month: string; year: string };
@@ -26,6 +27,8 @@ export default function Identity({
   onContinue: (result: DateResult) => void;
   /** Update path: the date of birth came from verification and is fixed. */
   lockedDob?: boolean;
+  /** Set when CONNECTION sent someone back here for a missing date of birth. */
+  notice?: string;
 }) {
   const [nameError, setNameError] = useState<string>();
   const [dobError, setDobError] = useState<string>();
@@ -54,6 +57,12 @@ export default function Identity({
 
   return (
     <form onSubmit={submit} noValidate>
+      {notice ? (
+        <div role="alert">
+          <p className={styles.notice}>{notice}</p>
+        </div>
+      ) : null}
+
       <ChapterHeader
         chapter={2}
         name="Identity"

@@ -33,7 +33,15 @@ export const COMMITTEE_COOKIE_PATH = "/committee";
  * person is that they sign in again once.
  */
 const VERSION = "v2";
-const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
+/**
+ * Thirty days. A committee member checking a registration on a Sunday should
+ * not be signed out by the following weekend. Length is the only thing that
+ * changed: the cookie is still signed the same way, still carries the name,
+ * fingerprint and view, and is still re-checked against COMMITTEE_USERS on
+ * every request, so removing someone or changing their password still ends
+ * their session on their next request rather than in thirty days.
+ */
+const SESSION_MS = 30 * 24 * 60 * 60 * 1000;
 
 function sign(payload: string, secret: string): string {
   return createHmac("sha256", secret).update(payload).digest("base64url");
@@ -61,7 +69,7 @@ export function issueSession(
   secret: string,
   now: number = Date.now(),
 ): IssuedSession {
-  const expiresAt = now + TWELVE_HOURS_MS;
+  const expiresAt = now + SESSION_MS;
   const payload =
     `${VERSION}.${expiresAt}.${encodeName(user.name)}.${user.fingerprint}.${user.view}`;
   return { value: `${payload}.${sign(payload, secret)}`, expires: new Date(expiresAt) };
