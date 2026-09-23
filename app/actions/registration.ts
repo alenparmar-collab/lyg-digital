@@ -1,6 +1,8 @@
 "use server";
 
+import { headers } from "next/headers";
 import { adminClient } from "@/lib/supabase/admin";
+import { clientIp } from "@/lib/committee/attempts";
 import { registrationSchema, verifySchema, ageFromIso } from "@/lib/registration/schema";
 import { SAVED_MEMBER_COLUMNS, type SavedMember } from "@/lib/registration/member";
 import { GUARDIAN_AGE } from "@/lib/registration/constants";
@@ -14,6 +16,15 @@ import { getSeason } from "@/lib/season";
 
 const LOCKOUT_WINDOW_MINUTES = 15;
 const LOCKOUT_ATTEMPTS = 5;
+
+/**
+ * The breadth limit on the CONNECTION check. The per-phone counter stops
+ * someone probing one number over and over; it does nothing about someone
+ * walking a list of numbers, which is the whole point of an enumeration
+ * attack. This catches that.
+ */
+const CHECK_IP_WINDOW_MINUTES = 60;
+const CHECK_IP_ATTEMPTS = 20;
 
 /** Same wording whether the phone is unknown or the date of birth is wrong. */
 const NEUTRAL =
@@ -41,8 +52,20 @@ async function isLockedOut(phone: string): Promise<boolean> {
   return (count ?? 0) >= LOCKOUT_ATTEMPTS;
 }
 
-async function recordFailure(phone: string): Promise<void> {
-  await adminClient().from("update_attempts").insert({ phone });
+async function recordFailure(phone: string, ip: string | null = null): Promise<void> {
+  await adminClient().from("update_attempts").insert({ phone, ip });
+}
+
+/** How many checks this address has made in the last hour. Null if unknowable. */
+async function countByIp(ip: string): Promise<number | null> {
+  const since = new Date(Date.now() - CHECK_IP_WINDOW_MINUTES * 60_000).toISOString();
+  const { count, error } = await adminClient()
+    .from("update_attempts")
+    .select("id", { count: "exact", head: true })
+    .eq("ip", ip)
+    .gte("created_at", since);
+  if (error) return null;
+  return typeof count === "number" ? count : null;
 }
 
 /** Does a member exist with exactly this phone AND this date of birth? */
@@ -74,6 +97,63 @@ export async function verifyMember(rawPhone: string, rawDob: string): Promise<Ve
 
   await recordFailure(phone);
   return { ok: false, message: NEUTRAL };
+}
+
+/**
+ * Whether this person is already on file, and nothing else.
+ *
+ * The answer is one of four words. No name, no area, no reference id, not even
+ * a first initial: knowing a mobile number and a date of birth is enough to
+ * reach this, so it must never become a way to read someone's record. That is
+ * the same exposure the verify step already has, and this deliberately does not
+ * widen it.
+ */
+export type ExistingCheck =
+  | { status: "exists" }
+  | { status: "not-found" }
+  | { status: "locked"; message: string }
+  | { status: "unchecked"; message: string };
+
+/**
+ * Called when Continue is tapped on CONNECTION, by which point we hold the
+ * same pair the unique constraint uses. Catching it here saves an existing
+ * member filling in seven more screens before being told at submit.
+ *
+ * Counted against the same per-phone limit as verify. Every check counts, not
+ * only the ones that find nothing: both answers tell you something about that
+ * number. A mistyped number lands on its own counter, so someone correcting a
+ * typo never locks themselves out, while five checks of one number in fifteen
+ * minutes does.
+ */
+export async function checkExistingMember(
+  rawPhone: string,
+  rawDob: string,
+): Promise<ExistingCheck> {
+  const parsed = verifySchema.safeParse({ phone: rawPhone, dob: rawDob });
+  if (!parsed.success) {
+    // Nothing to check against. The screen keeps its own field errors; this is
+    // only a guard against being called with rubbish.
+    return { status: "unchecked", message: NEUTRAL };
+  }
+
+  const { phone, dob } = parsed.data;
+
+  // Vercel sets this itself, so it cannot be spoofed. Without it the breadth
+  // limit cannot be enforced, and this refuses rather than counting nothing.
+  const ip = clientIp(await headers());
+  if (!ip) return { status: "locked", message: LOCKED };
+
+  // Either limit is enough to refuse: five checks of one number in fifteen
+  // minutes, or twenty checks from one address in an hour.
+  if (await isLockedOut(phone)) return { status: "locked", message: LOCKED };
+
+  const byIp = await countByIp(ip);
+  if (byIp === null) return { status: "unchecked", message: LOCKED };
+  if (byIp >= CHECK_IP_ATTEMPTS) return { status: "locked", message: LOCKED };
+
+  await recordFailure(phone, ip);
+
+  return (await matches(phone, dob)) ? { status: "exists" } : { status: "not-found" };
 }
 
 export async function submitRegistration(

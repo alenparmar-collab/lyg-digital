@@ -81,6 +81,8 @@ export default function JourneyShell({
   const [member, setMember] = useState<SavedMember | null>(null);
   const [lastReference, setLastReference] = useState<string | null>(null);
   const [goingBack, setGoingBack] = useState(false);
+  /** Shown on IDENTITY when CONNECTION had to send someone back for a date. */
+  const [identityNotice, setIdentityNotice] = useState<string>();
   const draftLoaded = useRef(false);
   const focusedChapter = useRef<Chapter | null>(null);
   const screenRef = useRef<HTMLDivElement>(null);
@@ -213,11 +215,18 @@ export default function JourneyShell({
 
           {chapter === "identity" && (
             <Identity
+              notice={identityNotice}
               fullName={draft.fullName}
               dob={dobParts}
               onFullName={(fullName) => update({ fullName })}
-              onDob={(v) => update({ dobDay: v.day, dobMonth: v.month, dobYear: v.year })}
-              onContinue={() => go("connection")}
+              onDob={(v) => {
+                setIdentityNotice(undefined);
+                update({ dobDay: v.day, dobMonth: v.month, dobYear: v.year });
+              }}
+              onContinue={() => {
+                setIdentityNotice(undefined);
+                go("connection");
+              }}
               lockedDob={isUpdate && draft.verified}
             />
           )}
@@ -231,6 +240,22 @@ export default function JourneyShell({
               onContinue={() => go("community")}
               quiet={quiet}
               lockedPhone={isUpdate && draft.verified}
+              // Only the new path needs the check: the update path has already
+              // proved who this is.
+              checkExisting={!isUpdate}
+              dobIso={dobCheck.iso}
+              onAlreadyRegistered={() => {
+                // Phone and date of birth are already in the draft, so VERIFY
+                // opens with both filled in and nothing is retyped.
+                update({ path: "update", verified: false });
+                go("verify");
+              }}
+              onMissingDob={() => {
+                setIdentityNotice(
+                  "We need your date of birth before we can go on. Please add it here.",
+                );
+                go("identity");
+              }}
             />
           )}
 

@@ -8,7 +8,8 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "icons": "sed -e 's/var(--logo-ink, #1B1A17)/#2447A8/g' public/brand/lyg-logo-one-ink.svg > app/icon.svg",
-    "pdf:samples": "esbuild scripts/generate-sample-pdfs.tsx --bundle --platform=node --format=esm --packages=external --alias:@=. --outfile=tmp/gen-samples.mjs --log-level=warning && node tmp/gen-samples.mjs"
+    "pdf:samples": "esbuild scripts/generate-sample-pdfs.tsx --bundle --platform=node --format=esm --packages=external --alias:@=. --outfile=tmp/gen-samples.mjs --log-level=warning && node tmp/gen-samples.mjs",
+    "icons:app": "node scripts/generate-icons.mjs"
   },
   "dependencies": {
     "@react-pdf/renderer": "^4.9.0",

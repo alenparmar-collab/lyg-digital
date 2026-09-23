@@ -1,11 +1,17 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useTransition } from "react";
 import ChapterHeader from "../ChapterHeader";
 import InkField from "../InkField";
 import MarginNote from "@/components/MarginNote";
 import StampButton from "@/components/StampButton";
-import { validateEmail, validatePhone } from "@/lib/registration/validate";
+import { checkExistingMember } from "@/app/actions/registration";
+import {
+  formatIndianMobile,
+  normalisePhone,
+  validateEmail,
+  validatePhone,
+} from "@/lib/registration/validate";
 import styles from "./Chapter.module.css";
 
 export default function Connection({
@@ -16,6 +22,10 @@ export default function Connection({
   onContinue,
   quiet = false,
   lockedPhone = false,
+  checkExisting = false,
+  dobIso,
+  onAlreadyRegistered,
+  onMissingDob,
 }: {
   phone: string;
   email: string;
@@ -25,14 +35,42 @@ export default function Connection({
   quiet?: boolean;
   /** Update path: the mobile number came from verification and is fixed. */
   lockedPhone?: boolean;
+  /** New path only: ask the server whether this person is already on file. */
+  checkExisting?: boolean;
+  /** The date of birth captured on IDENTITY, as stored. */
+  dobIso?: string;
+  /** Switch to the update path, carrying the number and date of birth over. */
+  onAlreadyRegistered?: () => void;
+  /** Send them back to IDENTITY rather than guessing at a missing date. */
+  onMissingDob?: () => void;
 }) {
   const [phoneError, setPhoneError] = useState<string>();
   const [emailError, setEmailError] = useState<string>();
+  /** Set when the server says this phone and date of birth are already on file. */
+  const [alreadyRegistered, setAlreadyRegistered] = useState(false);
+  /** Anything else the server wants to say: the rate limit, mostly. */
+  const [notice, setNotice] = useState<string>();
+  const [pending, startTransition] = useTransition();
   const phoneRef = useRef<HTMLInputElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
 
+  /**
+   * Put the tidied number back in the field, so what someone sees is what we
+   * will store. 07567659834, 075676 59834 and 91 75676 59834 all become
+   * 75676 59834 under the printed +91.
+   */
+  function tidyPhone() {
+    if (lockedPhone) return;
+    const e164 = normalisePhone(phone);
+    if (!e164) return;
+    const tidy = e164.replace(/^\+91/, "");
+    if (tidy !== phone) onPhone(tidy);
+  }
+
   function submit(e: React.FormEvent) {
     e.preventDefault();
+    setNotice(undefined);
+
     const p = lockedPhone ? undefined : validatePhone(phone);
     const em = validateEmail(email);
     setPhoneError(p);
@@ -46,7 +84,39 @@ export default function Connection({
       emailRef.current?.focus();
       return;
     }
-    onContinue();
+
+    tidyPhone();
+
+    // The update path has already verified who this is, so there is nothing
+    // to check.
+    if (!checkExisting) {
+      onContinue();
+      return;
+    }
+
+    // By now we hold the pair the unique constraint uses. Without a date of
+    // birth there is nothing to check, so go back and ask rather than guess.
+    if (!dobIso) {
+      onMissingDob?.();
+      return;
+    }
+
+    startTransition(async () => {
+      try {
+        const result = await checkExistingMember(phone, dobIso);
+        if (result.status === "exists") {
+          setAlreadyRegistered(true);
+          return;
+        }
+        if (result.status === "not-found") {
+          onContinue();
+          return;
+        }
+        setNotice(result.message);
+      } catch {
+        setNotice("Something went wrong at our end. Please try again in a moment.");
+      }
+    });
   }
 
   return (
@@ -61,30 +131,33 @@ export default function Connection({
         {lockedPhone ? (
           <div className={styles.locked}>
             <span className={styles.lockedLabel}>Mobile, on WhatsApp</span>
-            <span className={styles.lockedValue}>
-              +91 {phone.replace(/\D/g, "").slice(-10)}
-            </span>
+            <span className={styles.lockedValue}>{formatIndianMobile(phone)}</span>
             <p className={styles.lockedNote}>
               This is the number you verified with. To change it, speak to the LYG committee.
             </p>
           </div>
         ) : (
-        <InkField
-          label="Mobile, on WhatsApp"
-          value={phone}
-          onChange={(v) => {
-            setPhoneError(undefined);
-            onPhone(v);
-          }}
-          error={phoneError}
-          inputRef={phoneRef}
-          prefix="+91"
-          type="tel"
-          inputMode="tel"
-          autoComplete="tel-national"
-          enterKeyHint="next"
-          placeholder="98765 43210"
-        />
+          <InkField
+            label="Mobile, on WhatsApp"
+            value={phone}
+            onChange={(v) => {
+              setPhoneError(undefined);
+              // Correcting the number is how someone recovers from a mistyped
+              // one, so the block clears as soon as they start editing.
+              setAlreadyRegistered(false);
+              setNotice(undefined);
+              onPhone(v);
+            }}
+            onBlur={tidyPhone}
+            error={phoneError}
+            inputRef={phoneRef}
+            prefix="+91"
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel-national"
+            enterKeyHint="next"
+            placeholder="98765 43210"
+          />
         )}
 
         <Ripple />
@@ -114,7 +187,34 @@ export default function Connection({
       </MarginNote>
 
       <div className={styles.actions}>
-        <StampButton type="submit">Continue</StampButton>
+        {alreadyRegistered ? (
+          <div role="alert">
+            <p className={styles.noticeInfo}>
+              You&apos;re already registered with LYG. Changes are made through
+              &ldquo;Update your details&rdquo; rather than by registering again.
+            </p>
+            <div className={styles.noticeAction}>
+              <StampButton type="button" onClick={() => onAlreadyRegistered?.()}>
+                Update your details
+              </StampButton>
+            </div>
+            <p className={styles.noticeAside}>
+              Mistyped the number? Correct it above and tap Continue again.
+            </p>
+          </div>
+        ) : null}
+
+        {notice ? (
+          <div role="alert">
+            <p className={styles.notice}>{notice}</p>
+          </div>
+        ) : null}
+
+        {alreadyRegistered ? null : (
+          <StampButton type="submit" disabled={pending}>
+            {pending ? "Checking…" : "Continue"}
+          </StampButton>
+        )}
       </div>
     </form>
   );

@@ -44,7 +44,14 @@ export default function Verify({
     setPhoneError(p);
     setDobError(d.error);
     if (p) { phoneRef.current?.focus(); return; }
-    if (d.error || !d.iso) { dayRef.current?.focus(); return; }
+    if (d.error || !d.iso) {
+      // validateDateOfBirth always sets one or the other, but if that ever
+      // stopped being true this would refuse to advance with nothing on
+      // screen, which is the one thing a form must never do.
+      if (!d.error) setDobError("We need a valid date of birth.");
+      dayRef.current?.focus();
+      return;
+    }
 
     const iso = d.iso;
     startTransition(async () => {

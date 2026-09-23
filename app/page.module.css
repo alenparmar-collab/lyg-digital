@@ -96,15 +96,35 @@
 
 .note { margin: 0 0 0 var(--s-1); }
 
-.printline {
+/* The quietest line on the cover: the committee's way in on the left, the
+   printer's mark on the right, both at the same size and in the same ink. */
+.smallprint {
   margin: var(--s-2) 0 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-4);
+  padding-right: var(--s-7);
+}
+
+.committee {
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.printline {
+  margin: 0;
   font-family: var(--font-mono);
   font-size: var(--text-label);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ink-soft);
   text-align: right;
-  padding-right: var(--s-7);
 }
 
 /* ---------- tall phones: don't let the empty paper become a chasm ---------- */
@@ -139,5 +159,5 @@
     min-width: 340px;
     justify-self: start;
   }
-  .printline { grid-row: 1; grid-column: 2; padding-right: 0; text-align: right; }
+  .smallprint { grid-row: 1; grid-column: 2; padding-right: 0; justify-content: flex-end; gap: var(--s-5); }
 }

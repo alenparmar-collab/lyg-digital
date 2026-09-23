@@ -5,7 +5,7 @@ import ChapterHeader from "../ChapterHeader";
 import InkField from "../InkField";
 import { CheckField } from "../Choice";
 import StampButton from "@/components/StampButton";
-import { validatePhone } from "@/lib/registration/validate";
+import { normalisePhone, validatePhone } from "@/lib/registration/validate";
 import styles from "./Chapter.module.css";
 
 /**
@@ -38,6 +38,14 @@ export default function Guardian({
   const phoneRef = useRef<HTMLInputElement>(null);
   const consentRef = useRef<HTMLInputElement>(null);
 
+  /** Put the tidied number back in the field, as CONNECTION does. */
+  function tidyPhone() {
+    const e164 = normalisePhone(phone);
+    if (!e164) return;
+    const tidy = e164.replace(/^\+91/, "");
+    if (tidy !== phone) onPhone(tidy);
+  }
+
   function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim()) {
@@ -51,6 +59,7 @@ export default function Guardian({
       phoneRef.current?.focus();
       return;
     }
+    tidyPhone();
     if (!consent) {
       setConsentError("We need your parent or guardian to agree before we can register you.");
       consentRef.current?.focus();
@@ -90,6 +99,7 @@ export default function Guardian({
             setPhoneError(undefined);
             onPhone(v);
           }}
+          onBlur={tidyPhone}
           error={phoneError}
           inputRef={phoneRef}
           prefix="+91"
