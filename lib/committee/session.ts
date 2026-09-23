@@ -1,22 +1,38 @@
 import "server-only";
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
+import { COMMITTEE_VIEWS, type CommitteeUser, type CommitteeView } from "./users";
 
 /**
  * The committee session cookie.
  *
- * There is no session table. The cookie carries its own expiry and an
- * HMAC-SHA256 signature over it, so the server can tell a cookie it issued from
- * one someone typed, without storing anything. Change
- * COMMITTEE_SESSION_SECRET and every cookie ever issued stops verifying, which
- * is the way to sign everyone out at once.
+ * There is no session table. The cookie carries who signed in, which entry in
+ * the list they signed in as, and when it expires, all under one HMAC-SHA256
+ * signature. The server can therefore tell a cookie it issued from one someone
+ * typed, without storing anything.
  *
- * The signature covers the expiry, so moving the expiry forward invalidates the
- * cookie. Both halves are checked on every committee request.
+ * Three separate things end a session:
+ *   - the expiry passing;
+ *   - COMMITTEE_SESSION_SECRET changing, which invalidates every cookie ever
+ *     issued, and is how to sign everyone out at once;
+ *   - the entry behind the fingerprint no longer being in the list, or its
+ *     view having changed, which is what makes removing a person, changing
+ *     their password, or narrowing what they may see take effect on their very
+ *     next request rather than in twelve hours.
+ *
+ * The signature covers all of it, so nothing in the cookie can be edited: not
+ * the expiry, not the fingerprint, not the name, and not the view. A cookie
+ * claiming "all" is worth nothing once the list says "summary".
  */
 
 export const COMMITTEE_COOKIE = "lyg_committee";
+export const COMMITTEE_COOKIE_PATH = "/committee";
 
-const VERSION = "v1";
+/**
+ * v2 carries a name and a fingerprint; v1 carried only an expiry. A v1 cookie
+ * simply fails to verify, so the one effect of this change on a signed-in
+ * person is that they sign in again once.
+ */
+const VERSION = "v2";
 const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
 
 function sign(payload: string, secret: string): string {
@@ -35,34 +51,67 @@ export function sha256Equal(a: string, b: string): boolean {
   return timingSafeEqual(ha, hb);
 }
 
+const encodeName = (name: string) => Buffer.from(name, "utf8").toString("base64url");
+const decodeName = (raw: string) => Buffer.from(raw, "base64url").toString("utf8");
+
 export type IssuedSession = { value: string; expires: Date };
 
-export function issueSession(secret: string, now: number = Date.now()): IssuedSession {
+export function issueSession(
+  user: CommitteeUser,
+  secret: string,
+  now: number = Date.now(),
+): IssuedSession {
   const expiresAt = now + TWELVE_HOURS_MS;
-  const payload = `${VERSION}.${expiresAt}`;
+  const payload =
+    `${VERSION}.${expiresAt}.${encodeName(user.name)}.${user.fingerprint}.${user.view}`;
   return { value: `${payload}.${sign(payload, secret)}`, expires: new Date(expiresAt) };
 }
 
-/** True only for a cookie this server signed, which has not yet expired. */
-export function verifySession(
+export type SessionClaims = { name: string; fingerprint: string; view: CommitteeView };
+
+/**
+ * The claims inside a cookie this server signed and which has not expired, or
+ * null. It says nothing about whether that person is still on the list: that
+ * is a separate check, against the list as it is right now.
+ */
+export function readSession(
   value: string | undefined | null,
   secret: string,
   now: number = Date.now(),
-): boolean {
-  if (!value) return false;
+): SessionClaims | null {
+  if (!value) return null;
 
   const parts = value.split(".");
-  if (parts.length !== 3) return false;
+  if (parts.length !== 6) return null;
 
-  const [version, expiresRaw, signature] = parts as [string, string, string];
-  if (version !== VERSION) return false;
+  const [version, expiresRaw, nameRaw, fingerprint, viewRaw, signature] = parts as [
+    string,
+    string,
+    string,
+    string,
+    string,
+    string,
+  ];
+  if (version !== VERSION) return null;
 
-  // Signature first: never trust the expiry in an unsigned cookie.
-  if (!sha256Equal(signature, sign(`${version}.${expiresRaw}`, secret))) return false;
+  // Signature first: never trust anything in an unsigned cookie.
+  const payload = `${version}.${expiresRaw}.${nameRaw}.${fingerprint}.${viewRaw}`;
+  if (!sha256Equal(signature, sign(payload, secret))) return null;
+
+  if (!COMMITTEE_VIEWS.includes(viewRaw as CommitteeView)) return null;
 
   const expiresAt = Number(expiresRaw);
-  if (!Number.isFinite(expiresAt)) return false;
-  return expiresAt > now;
+  if (!Number.isFinite(expiresAt) || expiresAt <= now) return null;
+
+  let name: string;
+  try {
+    name = decodeName(nameRaw);
+  } catch {
+    return null;
+  }
+  if (!name) return null;
+
+  return { name, fingerprint, view: viewRaw as CommitteeView };
 }
 
 /**
@@ -78,9 +127,7 @@ export function committeeCookieOptions(expires: Date) {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax" as const,
-    path: "/committee",
+    path: COMMITTEE_COOKIE_PATH,
     expires,
   };
 }
-
-export const COMMITTEE_COOKIE_PATH = "/committee";

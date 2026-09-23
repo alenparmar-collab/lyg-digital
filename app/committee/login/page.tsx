@@ -1,7 +1,7 @@
 import Logo from "@/components/Logo";
 import RegMarks from "@/components/RegMarks";
 import LoginForm from "./LoginForm";
-import { isCommitteeConfigured } from "@/lib/committee/config";
+import { isCommitteeConfigured } from "@/lib/committee/users";
 import styles from "./login.module.css";
 
 export const dynamic = "force-dynamic";

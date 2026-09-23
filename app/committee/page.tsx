@@ -1,179 +1,198 @@
-import Link from "next/link";
 import Logo from "@/components/Logo";
-import LogoutButton from "./LogoutButton";
-import DownloadPdfButton from "@/components/DownloadPdfButton";
+import Link from "next/link";
+import CommitteeHeader from "./CommitteeHeader";
 import { requireCommittee } from "./guard";
-import { getMemberForPdf } from "./actions";
-import { adminClient, isSupabaseConfigured } from "@/lib/supabase/admin";
-import { formatIndianMobile, normalisePhone } from "@/lib/registration/validate";
-import { resolveSeason } from "@/lib/season";
-import styles from "./committee.module.css";
+import { isSupabaseConfigured } from "@/lib/supabase/admin";
+import {
+  EMPTY_SUMMARY,
+  MIN_VISIBLE_COUNT,
+  loadSummary,
+  type Breakdown,
+} from "@/lib/committee/summary";
+import styles from "./summary.module.css";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 /**
- * What the browser is allowed to know about each registration: enough to find
- * the right one, and nothing more. Phone numbers, dates of birth and guardian
- * details stay on the server until someone opens a single record or asks for a
- * single PDF.
+ * The summary sheet, and the first thing a committee member sees.
+ *
+ * It answers "who are the young people of this parish" without naming one of
+ * them. Everything on it is a count, worked out on the server; nothing
+ * identifying is sent to the browser at all, displayed or not.
+ *
+ * Built to be printed. Father is most likely to want this on paper at a
+ * meeting, so it is a sheet with a masthead rather than a dashboard, and the
+ * print rules below put it on one A4 page.
  */
-type Row = {
-  id: string;
-  reference_id: string;
-  full_name: string;
-  area: string;
-  community: string | null;
-  membership_status: string;
-  created_at: string;
-};
 
 const IST = "Asia/Kolkata";
 
-function shortDate(value: string): string {
+function longDate(value: string | null): string {
+  if (!value) return "—";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "—";
   return new Intl.DateTimeFormat("en-IN", {
     timeZone: IST,
-    day: "2-digit",
-    month: "short",
+    day: "numeric",
+    month: "long",
     year: "numeric",
-  }).format(new Date(value));
+  }).format(d);
 }
 
-/** Escape the characters that mean something inside a PostgREST or() filter. */
-function forFilter(value: string): string {
-  return value.replace(/[%,()\\]/g, " ").trim();
-}
-
-export default async function CommitteeListPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ q?: string }>;
-}) {
-  const who = await requireCommittee();
-  const { q } = await searchParams;
-  const query = (q ?? "").trim();
-  const season = resolveSeason(null);
-
-  if (!isSupabaseConfigured()) {
-    return (
-      <Shell who={who}>
-        <h1 className={styles.title}>LYG registrations</h1>
-        <p className={styles.notice}>
-          Supabase is not configured in this environment, so there is nothing to list. Set
-          NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.
-        </p>
-      </Shell>
-    );
-  }
-
-  const db = adminClient();
-
-  // The total is every registration, not the filtered count.
-  const { count: total } = await db.from("members").select("id", { count: "exact", head: true });
-
-  let select = db
-    .from("members")
-    .select("id, reference_id, full_name, area, community, membership_status, created_at")
-    .order("created_at", { ascending: false })
-    .limit(200);
-
-  if (query) {
-    const safe = forFilter(query);
-    // Search by name, phone or reference id. A phone is normalised first, so
-    // "98765 43210" finds +919876543210.
-    const asPhone = normalisePhone(query);
-    const clauses = [`full_name.ilike.%${safe}%`, `reference_id.ilike.%${safe}%`];
-    if (asPhone) clauses.push(`phone.eq.${asPhone}`);
-    else if (/^\d{3,}$/.test(safe)) clauses.push(`phone.ilike.%${safe}%`);
-    select = select.or(clauses.join(","));
-  }
-
-  const { data, error } = await select;
-  if (error) throw error;
-  const rows = (data ?? []) as Row[];
-
+function Figure({ value, label }: { value: number; label: string }) {
   return (
-    <Shell who={who}>
-      <h1 className={styles.title}>LYG registrations</h1>
-      <p className={styles.count}>
-        {total ?? 0} {total === 1 ? "registration" : "registrations"}
-        {query ? ` · ${rows.length} matching` : ""}
-      </p>
-
-      <form className={styles.search} method="get" role="search">
-        <div className={styles.searchField}>
-          <label className={styles.searchLabel} htmlFor="q">
-            Search by name, phone or reference
-          </label>
-          <input
-            className={styles.searchInput}
-            id="q"
-            name="q"
-            type="search"
-            defaultValue={query}
-            autoCapitalize="none"
-            spellCheck={false}
-          />
-        </div>
-        <button className={styles.searchGo} type="submit">
-          Search
-        </button>
-        {query ? (
-          <Link className={styles.clear} href="/committee">
-            Clear
-          </Link>
-        ) : null}
-      </form>
-
-      {rows.length === 0 ? (
-        <p className={styles.empty}>
-          {query ? "Nothing matched that search." : "No registrations yet."}
-        </p>
-      ) : (
-        <div className={styles.list}>
-          {rows.map((row) => (
-            <div key={row.id} className={styles.row}>
-              <Link href={`/committee/${row.id}`} className={styles.rowMain}>
-                <p className={styles.rowRef}>{row.reference_id}</p>
-                <p className={styles.rowName}>{row.full_name}</p>
-                <p className={styles.rowWhere}>
-                  {row.community ? `${row.area} · ${row.community}` : row.area}
-                </p>
-              </Link>
-              <div className={styles.rowMeta}>
-                <p className={styles.rowDate}>{shortDate(row.created_at)}</p>
-                <span
-                  className={`${styles.badge} ${
-                    row.membership_status === "updated" ? styles.badgeUpdated : ""
-                  }`}
-                >
-                  {row.membership_status === "updated" ? "Updated Details" : "New Member"}
-                </span>
-                {/* The action is bound to this one id and checks the session
-                    before it reads anything. */}
-                <DownloadPdfButton
-                  variant="link"
-                  season={season}
-                  load={getMemberForPdf.bind(null, row.id)}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </Shell>
+    <div className={styles.figure}>
+      <p className={styles.figureNum}>{value}</p>
+      <p className={styles.figureLabel}>{label}</p>
+    </div>
   );
 }
 
-function Shell({ who, children }: { who: string; children: React.ReactNode }) {
+function Split({
+  title,
+  rows,
+}: {
+  title: string;
+  rows: { label: string; value: number }[];
+}) {
+  return (
+    <div className={styles.split}>
+      <h2 className={styles.splitTitle}>{title}</h2>
+      <dl className={styles.splitRows}>
+        {rows.map((r) => (
+          <div key={r.label} className={styles.splitRow}>
+            <dt>{r.label}</dt>
+            <dd>{r.value}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  );
+}
+
+function Bars({
+  title,
+  breakdown,
+  empty,
+}: {
+  title: string;
+  breakdown: Breakdown;
+  empty: string;
+}) {
+  const { rows, other, max } = breakdown;
+  const width = (count: number) => `${Math.max(2, Math.round((count / max) * 100))}%`;
+
+  return (
+    <section className={styles.section}>
+      <h2 className={styles.sectionTitle}>{title}</h2>
+      {rows.length === 0 && other === 0 ? (
+        <p className={styles.none}>{empty}</p>
+      ) : (
+        <div className={styles.bars}>
+          {rows.map((row) => (
+            <div key={row.label} className={styles.barRow}>
+              <p className={styles.barLabel}>{row.label}</p>
+              <div className={styles.barTrack}>
+                <div className={styles.barFill} style={{ width: width(row.count) }} />
+              </div>
+              <p className={styles.barCount}>{row.count}</p>
+            </div>
+          ))}
+          {other > 0 ? (
+            <div className={`${styles.barRow} ${styles.barOther}`}>
+              <p className={styles.barLabel}>Other</p>
+              <div className={styles.barTrack}>
+                <div className={styles.barFillOther} style={{ width: width(other) }} />
+              </div>
+              <p className={styles.barCount}>{other}</p>
+            </div>
+          ) : null}
+        </div>
+      )}
+    </section>
+  );
+}
+
+export default async function CommitteeSummaryPage() {
+  const user = await requireCommittee();
+  const configured = isSupabaseConfigured();
+  const summary = configured ? await loadSummary() : EMPTY_SUMMARY;
+
   return (
     <main className={styles.page}>
-      <div className={styles.top}>
-        <Logo variant="two-ink" width="44px" className={styles.logo} decorative />
-        <p className={styles.who}>{formatIndianMobile(who)}</p>
-        <LogoutButton />
-      </div>
-      {children}
+      <CommitteeHeader name={user.name} />
+
+      {user.view === "all" ? (
+        <div className={styles.actions} data-print-hide>
+          <Link className={styles.toList} href="/committee/registrations">
+            See the full list of registrations
+          </Link>
+        </div>
+      ) : null}
+
+      <article className={styles.sheet} aria-label="LYG registration summary">
+        <header className={styles.masthead}>
+          <span className={styles.logo}>
+            <Logo variant="two-ink" width="46px" decorative />
+          </span>
+          <div>
+            <p className={styles.org}>Lourdes Youth Group</p>
+            <p className={styles.parish}>CTM Parish · Ahmedabad</p>
+            <p className={styles.docTitle}>Registration summary</p>
+          </div>
+        </header>
+
+        {!configured ? (
+          <p className={styles.notice}>
+            Supabase is not configured in this environment, so there is nothing to summarise.
+          </p>
+        ) : null}
+
+        <section className={styles.headline}>
+          <Figure value={summary.total} label="Registered" />
+          <Figure value={summary.last7} label="In the last 7 days" />
+        </section>
+
+        <section className={styles.splits}>
+          <Split
+            title="Membership"
+            rows={[
+              { label: "New members", value: summary.newCount },
+              { label: "Updated their details", value: summary.updatedCount },
+            ]}
+          />
+          <Split
+            title="Age"
+            rows={[
+              { label: "Under 18", value: summary.under18 },
+              { label: "18 and over", value: summary.adults },
+            ]}
+          />
+        </section>
+
+        <Bars title="By area" breakdown={summary.areas} empty="No areas yet." />
+        <Bars
+          title="Interests and skills"
+          breakdown={summary.interests}
+          empty="Nobody has picked an interest yet."
+        />
+        <Bars
+          title="Hoping for"
+          breakdown={summary.purposes}
+          empty="Nobody has said what they are hoping for yet."
+        />
+
+        <footer className={styles.footer}>
+          <p className={styles.footNote}>
+            Most recent registration: {longDate(summary.latest)}
+          </p>
+          <p className={styles.footNote}>
+            Groups of fewer than {MIN_VISIBLE_COUNT} are counted under Other, so no one person
+            can be picked out. Ages are worked out in Asia/Kolkata.
+          </p>
+        </footer>
+      </article>
     </main>
   );
 }

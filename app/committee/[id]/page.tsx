@@ -1,13 +1,11 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import Logo from "@/components/Logo";
 import RegistrationDocument from "@/components/RegistrationDocument";
 import DownloadPdfButton from "@/components/DownloadPdfButton";
-import LogoutButton from "../LogoutButton";
-import { requireCommittee } from "../guard";
+import CommitteeHeader from "../CommitteeHeader";
+import { requireFullAccess } from "../guard";
 import { adminClient, isSupabaseConfigured } from "@/lib/supabase/admin";
 import { SAVED_MEMBER_COLUMNS, type SavedMember } from "@/lib/registration/member";
-import { formatIndianMobile } from "@/lib/registration/validate";
 import { resolveSeason } from "@/lib/season";
 import styles from "../committee.module.css";
 
@@ -25,7 +23,7 @@ export default async function CommitteeRecordPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const who = await requireCommittee();
+  const user = await requireFullAccess();
   const { id } = await params;
 
   if (!UUID.test(id)) notFound();
@@ -45,17 +43,10 @@ export default async function CommitteeRecordPage({
 
   return (
     <main className={styles.page}>
-      <div className={styles.top} data-print-hide>
-        <Logo variant="two-ink" width="44px" className={styles.logo} decorative />
-        <p className={styles.who}>{formatIndianMobile(who)}</p>
-        <LogoutButton />
-      </div>
-
-      <div data-print-hide>
-        <Link className={styles.back} href="/committee">
-          Back to all registrations
-        </Link>
-      </div>
+      <CommitteeHeader
+        name={user.name}
+        back={{ href: "/committee/registrations", label: "Back to all registrations" }}
+      />
 
       <RegistrationDocument
         member={member}

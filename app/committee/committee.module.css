@@ -51,6 +51,14 @@
   text-transform: uppercase;
 }
 
+.privacy {
+  margin: var(--s-4) 0 0;
+  max-width: 62ch;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
 .count {
   margin: var(--s-2) 0 0;
   font-family: var(--font-mono);
