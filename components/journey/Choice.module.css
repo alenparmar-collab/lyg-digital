@@ -57,7 +57,20 @@
   transition: background-color var(--dur-fast) var(--ease-print);
 }
 
-.itemOn .mark { background: var(--sticker-fill); border-color: var(--sticker-fill); color: var(--sticker-text); }
+/* The filled state of a square marker, wherever one appears. Every marker in
+   the flow uses this one rule, so a new caller cannot quietly end up with a
+   tick drawn in transparent ink.
+
+   The pair is --sticker-fill / --sticker-text, never --ink-season directly:
+   paper on Ordinary green is 2.95:1, which fails even the 3:1 asked of a
+   graphic. The pair passes AA in all eight seasons. */
+.itemOn .mark,
+.checkOn .mark {
+  background: var(--sticker-fill);
+  border-color: var(--sticker-fill);
+  color: var(--sticker-text);
+}
+
 .mark svg { display: block; }
 
 /* ---------- stickers: multi-select, on a sheet of paper ---------- */
@@ -147,6 +160,9 @@
 }
 
 .check:has(.input:focus-visible) { outline: var(--focus-ring); outline-offset: 3px; }
+
+/* Nudged down so the square sits on the first line of the label, which wraps
+   to two or three lines on a phone. */
 .checkMark { margin-top: 2px; }
 
 .error {
@@ -157,6 +173,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .item, .mark, .sticker, .strip { transition: none; }
+  .item, .mark, .sticker, .strip, .check { transition: none; }
   .stickerOn { transform: none; }
 }
