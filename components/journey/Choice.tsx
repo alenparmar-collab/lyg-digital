@@ -164,7 +164,9 @@ export function CheckField({
   const id = useId();
   return (
     <div>
-      <label className={styles.check}>
+      {/* checkOn is what fills the square. Without it the tick still renders,
+          but .mark paints it transparent and there is nothing to see. */}
+      <label className={`${styles.check} ${checked ? styles.checkOn : ""}`}>
         <input
           ref={inputRef}
           className={styles.input}
