@@ -14,6 +14,7 @@ export default function JoinPage() {
       // Logo reads the SVG from disk, so it renders here on the server and
       // travels into the client wizard as an element.
       logo={<Logo variant="two-ink" width="56px" decorative />}
+      season={season}
       // Jokes stop from Holy Thursday to Holy Saturday.
       quiet={season === "triduum"}
     />

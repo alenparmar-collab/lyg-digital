@@ -168,3 +168,10 @@ export function titleCasePlace(value: string): string {
 
   return out;
 }
+
+/** E.164 back to the grouping people read: +919876543210 -> +91 98765 43210. */
+export function formatIndianMobile(e164: string): string {
+  const digits = e164.replace(/^\+91/, "");
+  if (digits.length !== 10) return e164;
+  return `${PHONE_COUNTRY_CODE} ${digits.slice(0, 5)} ${digits.slice(5)}`;
+}

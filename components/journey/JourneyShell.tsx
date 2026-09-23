@@ -27,6 +27,7 @@ import {
 import type { SavedMember } from "@/lib/registration/member";
 import { GUARDIAN_AGE } from "@/lib/registration/constants";
 import { validateDateOfBirth } from "@/lib/registration/validate";
+import type { Season } from "@/lib/season";
 import styles from "./JourneyShell.module.css";
 
 type Chapter =
@@ -66,10 +67,13 @@ const REF_KEY = "lyg:last-reference";
 
 export default function JourneyShell({
   logo,
+  season,
   quiet = false,
 }: {
   /** The two-ink mark for the registration document, rendered on the server. */
   logo: React.ReactNode;
+  /** Today's liturgical season, resolved on the server so the PDF matches the page. */
+  season: Season;
   quiet?: boolean;
 }) {
   const [chapter, setChapter] = useState<Chapter>("welcome");
@@ -313,7 +317,7 @@ export default function JourneyShell({
 
           {chapter === "done" &&
             (member ? (
-              <Done member={member} logo={logo} />
+              <Done member={member} logo={logo} season={season} />
             ) : (
               // Reached by a refresh: the saved row was never stored, so there
               // is nothing to rebuild the document from.

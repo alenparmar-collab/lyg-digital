@@ -113,11 +113,18 @@
   gap: var(--s-2) var(--s-4);
   padding: var(--s-4) 0;
   border-bottom: 1px solid var(--paper-edge);
+}
+
+/* The row is a container, not a link: it holds the link to the record AND a
+   download control, and a button inside an anchor is not valid markup. */
+.rowMain {
+  display: block;
+  min-width: 0;
   text-decoration: none;
   color: inherit;
 }
 
-.row:hover .rowName { text-decoration: underline; text-underline-offset: 3px; }
+.rowMain:hover .rowName { text-decoration: underline; text-underline-offset: 3px; }
 
 .rowRef {
   margin: 0 0 var(--s-1);

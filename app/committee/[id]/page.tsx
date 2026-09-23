@@ -2,11 +2,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import Logo from "@/components/Logo";
 import RegistrationDocument from "@/components/RegistrationDocument";
-import PrintButton from "@/components/PrintButton";
+import DownloadPdfButton from "@/components/DownloadPdfButton";
 import LogoutButton from "../LogoutButton";
 import { requireCommittee } from "../guard";
 import { adminClient, isSupabaseConfigured } from "@/lib/supabase/admin";
 import { SAVED_MEMBER_COLUMNS, type SavedMember } from "@/lib/registration/member";
+import { formatIndianMobile } from "@/lib/registration/validate";
+import { resolveSeason } from "@/lib/season";
 import styles from "../committee.module.css";
 
 export const dynamic = "force-dynamic";
@@ -23,7 +25,7 @@ export default async function CommitteeRecordPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const email = await requireCommittee();
+  const who = await requireCommittee();
   const { id } = await params;
 
   if (!UUID.test(id)) notFound();
@@ -39,12 +41,13 @@ export default async function CommitteeRecordPage({
   if (!data) notFound();
 
   const member = data as unknown as SavedMember;
+  const season = resolveSeason(null);
 
   return (
     <main className={styles.page}>
       <div className={styles.top} data-print-hide>
         <Logo variant="two-ink" width="44px" className={styles.logo} decorative />
-        <p className={styles.who}>{email}</p>
+        <p className={styles.who}>{formatIndianMobile(who)}</p>
         <LogoutButton />
       </div>
 
@@ -60,7 +63,7 @@ export default async function CommitteeRecordPage({
       />
 
       <div className={styles.docActions} data-print-hide>
-        <PrintButton>Print / save PDF</PrintButton>
+        <DownloadPdfButton member={member} season={season} />
       </div>
     </main>
   );

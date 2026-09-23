@@ -1,14 +1,23 @@
 import Link from "next/link";
 import Logo from "@/components/Logo";
 import LogoutButton from "./LogoutButton";
+import DownloadPdfButton from "@/components/DownloadPdfButton";
 import { requireCommittee } from "./guard";
+import { getMemberForPdf } from "./actions";
 import { adminClient, isSupabaseConfigured } from "@/lib/supabase/admin";
-import { normalisePhone } from "@/lib/registration/schema";
+import { formatIndianMobile, normalisePhone } from "@/lib/registration/validate";
+import { resolveSeason } from "@/lib/season";
 import styles from "./committee.module.css";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
+/**
+ * What the browser is allowed to know about each registration: enough to find
+ * the right one, and nothing more. Phone numbers, dates of birth and guardian
+ * details stay on the server until someone opens a single record or asks for a
+ * single PDF.
+ */
 type Row = {
   id: string;
   reference_id: string;
@@ -40,13 +49,14 @@ export default async function CommitteeListPage({
 }: {
   searchParams: Promise<{ q?: string }>;
 }) {
-  const email = await requireCommittee();
+  const who = await requireCommittee();
   const { q } = await searchParams;
   const query = (q ?? "").trim();
+  const season = resolveSeason(null);
 
   if (!isSupabaseConfigured()) {
     return (
-      <Shell email={email}>
+      <Shell who={who}>
         <h1 className={styles.title}>LYG registrations</h1>
         <p className={styles.notice}>
           Supabase is not configured in this environment, so there is nothing to list. Set
@@ -83,7 +93,7 @@ export default async function CommitteeListPage({
   const rows = (data ?? []) as Row[];
 
   return (
-    <Shell email={email}>
+    <Shell who={who}>
       <h1 className={styles.title}>LYG registrations</h1>
       <p className={styles.count}>
         {total ?? 0} {total === 1 ? "registration" : "registrations"}
@@ -122,14 +132,14 @@ export default async function CommitteeListPage({
       ) : (
         <div className={styles.list}>
           {rows.map((row) => (
-            <Link key={row.id} href={`/committee/${row.id}`} className={styles.row}>
-              <div>
+            <div key={row.id} className={styles.row}>
+              <Link href={`/committee/${row.id}`} className={styles.rowMain}>
                 <p className={styles.rowRef}>{row.reference_id}</p>
                 <p className={styles.rowName}>{row.full_name}</p>
                 <p className={styles.rowWhere}>
                   {row.community ? `${row.area} · ${row.community}` : row.area}
                 </p>
-              </div>
+              </Link>
               <div className={styles.rowMeta}>
                 <p className={styles.rowDate}>{shortDate(row.created_at)}</p>
                 <span
@@ -139,8 +149,15 @@ export default async function CommitteeListPage({
                 >
                   {row.membership_status === "updated" ? "Updated Details" : "New Member"}
                 </span>
+                {/* The action is bound to this one id and checks the session
+                    before it reads anything. */}
+                <DownloadPdfButton
+                  variant="link"
+                  season={season}
+                  load={getMemberForPdf.bind(null, row.id)}
+                />
               </div>
-            </Link>
+            </div>
           ))}
         </div>
       )}
@@ -148,12 +165,12 @@ export default async function CommitteeListPage({
   );
 }
 
-function Shell({ email, children }: { email: string; children: React.ReactNode }) {
+function Shell({ who, children }: { who: string; children: React.ReactNode }) {
   return (
     <main className={styles.page}>
       <div className={styles.top}>
         <Logo variant="two-ink" width="44px" className={styles.logo} decorative />
-        <p className={styles.who}>{email}</p>
+        <p className={styles.who}>{formatIndianMobile(who)}</p>
         <LogoutButton />
       </div>
       {children}

@@ -1,6 +1,7 @@
 import Logo from "@/components/Logo";
 import RegMarks from "@/components/RegMarks";
 import LoginForm from "./LoginForm";
+import { isCommitteeConfigured } from "@/lib/committee/config";
 import styles from "./login.module.css";
 
 export const dynamic = "force-dynamic";
@@ -8,9 +9,13 @@ export const dynamic = "force-dynamic";
 export default async function CommitteeLoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ denied?: string; unconfigured?: string }>;
+  searchParams: Promise<{ unconfigured?: string }>;
 }) {
-  const { denied, unconfigured } = await searchParams;
+  const { unconfigured } = await searchParams;
+
+  // Checked here as well as in the query string, so a deployment missing its
+  // variables shows the same thing however someone arrived at this page.
+  const configured = isCommitteeConfigured() && unconfigured !== "1";
 
   return (
     <main className={styles.page}>
@@ -23,17 +28,18 @@ export default async function CommitteeLoginPage({
         </div>
       </div>
 
-      {unconfigured === "1" ? (
-        <p className={styles.error} role="alert">
-          Sign in is unavailable: this deployment has no Supabase configuration yet.
-        </p>
+      {configured ? (
+        <>
+          <LoginForm />
+          <p className={styles.note}>
+            One login, for the committee member who manages registrations.
+          </p>
+        </>
       ) : (
-        <LoginForm denied={denied === "1"} />
+        <p className={styles.error} role="alert">
+          Committee access isn&apos;t configured.
+        </p>
       )}
-
-      <p className={styles.note}>
-        Committee accounts are created by the parish in Supabase. There is no sign-up.
-      </p>
     </main>
   );
 }
